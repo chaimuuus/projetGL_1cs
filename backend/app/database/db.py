@@ -3,6 +3,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import OperationalError
 
 from app.config import DATABASE_URL
+
 print("Connecting to database at:", DATABASE_URL)
 try:
     engine = create_engine(DATABASE_URL, echo=True)
