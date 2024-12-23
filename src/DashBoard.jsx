@@ -140,7 +140,7 @@ export default function DashBoard() {
 
                             {/* Navigation Links */}
                             <div className="flex flex-wrap gap-2 md:gap-4 text-black items-center">
-                                {['Plombier', 'Électricien', 'Peintre', 'Couturière'].map((link) => (
+                                {['Plombier', 'Électricien', 'Peintre', 'Couturière','Jardinier','Cuisinier'].map((link) => (
                                     <a
                                         key={link}
                                         href="#"
