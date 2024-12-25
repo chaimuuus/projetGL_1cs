@@ -5,7 +5,7 @@
 -- Dumped from database version 14.13 (Ubuntu 14.13-0ubuntu0.22.04.1)
 -- Dumped by pg_dump version 14.13 (Ubuntu 14.13-0ubuntu0.22.04.1)
 
-SET statement_timeout = 0;
+SET statement_ti    meout = 0;
 SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;
 SET client_encoding = 'UTF8';

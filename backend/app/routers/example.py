@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from fastapi import APIRouter,Depends
-from crud.crud import get_artisans
-from database.db import get_db
+from ..crud.crud import get_artisans
+from ..database.db import get_db
 router = APIRouter()
 
 @router.get("/artisans")

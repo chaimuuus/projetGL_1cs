@@ -1,7 +1,0 @@
-# Virtual environment
-.venv/
-Pipfile.lock
-l
-
-# Environment variables
-.env
