@@ -1,16 +1,36 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends , Header
 from sqlalchemy.orm import Session  
 from sqlalchemy import text
-from ..models.model_User import User_signup , User_login 
-from ..Utils.hashing import hash_password ,verify_password
+from ..models.model_User import User_signup, User_login
+from ..Utils.hashing import hash_password, verify_password
 from ..database.db import get_db
-import secrets
-from fastapi.security import OAuth2PasswordBearer
-from datetime import datetime, timedelta, timezone
+import jwt
 from fastapi.responses import JSONResponse
-
+from datetime import datetime, timedelta, timezone
+ 
+SECRET_KEY = "projetcode"
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_DAYS = 2
 
 router = APIRouter()
+
+# Utility function to create JWT tokens
+def create_access_token(data: dict, expires_delta: timedelta):
+    to_encode = data.copy()
+    expire = datetime.utcnow() + expires_delta
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+
+# Utility function to verify and decode JWT tokens
+def decode_access_token(token: str):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        return payload
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token has expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
 
 @router.post("/user/signup")
 def user_signup(user_data: User_signup, db: Session = Depends(get_db)):
@@ -58,9 +78,7 @@ def user_signup(user_data: User_signup, db: Session = Depends(get_db)):
     db.commit()  # Commit the transaction to save changes
 
     return {"message": "User registered successfully"}
-  
-  
-  
+
 @router.post("/user/login")
 def user_login(user_data: User_login, db: Session = Depends(get_db)):
     # Validate required fields
@@ -82,83 +100,32 @@ def user_login(user_data: User_login, db: Session = Depends(get_db)):
     if not verify_password(user_data.password, user[3]):
         raise HTTPException(status_code=400, detail="Invalid email or password.")
 
-    session_token = secrets.token_hex(32)
-    expiration_time = datetime.now(timezone.utc) + timedelta(days=2)
- 
-    result = db.execute(
-    text(
-        "INSERT INTO sessions (user_id, artisan_id, user_type, session_token, expires_at) VALUES (:user_id, :artisan_id, :user_type, :session_token, :expires_at)"
-    ),
-    {
-        "user_id": user[0],
-        "artisan_id": None,
-        "user_type": "user",
-        "session_token": session_token,
-        "expires_at": expiration_time
-    }
-)
-    db.commit()
-
-
-    # Return session token in response
-    response = JSONResponse(content={"message": "Login successful", "session_token": session_token,"user_id":user[0]})
-    response.set_cookie(
-        key="session_token", 
-        value=session_token, 
-        httponly=True,  # Prevent JavaScript access to the cookie
-        secure=True,    # Ensure cookie is sent over HTTPS
-        samesite="Strict",  # Ensure cookie is not sent in cross-site requests
-        expires=expiration_time  # Set cookie expiration time
+    # Generate JWT token
+    access_token = create_access_token(
+        data={"user_id": user[0], "email": user[2]},
+        expires_delta=timedelta(days=ACCESS_TOKEN_EXPIRE_DAYS)
     )
-    return response
 
-def get_session(session_token: str, db: Session = Depends(get_db)):
-    # Use raw SQL to query the session
-    query = text("""
-        SELECT * 
-        FROM sessions 
-        WHERE session_token = :session_token
-    """)
-    
-    result = db.execute(query, {"session_token": session_token}).fetchone()
+    return {"access_token": access_token, "token_type": "bearer"}
 
-    if not result:
-        raise HTTPException(status_code=400, detail="Session not found.")
-    
-    # Extract expiration date from the query result
-    expires_at = result[6]  # Adjust the column name based on your database table schema
-    
-    # Compare expiration time with the current UTC time
-    if expires_at.tzinfo is None:
-        expires_at = expires_at.replace(tzinfo=timezone.utc)
-
-    # Compare expiration time with the current UTC time
-    if expires_at < datetime.now(timezone.utc):
-        raise HTTPException(status_code=400, detail="Session expired.")
-
-    return result
-
-@router.post("/user/logout")
-def user_logout(session_token: str, db: Session = Depends(get_db)):
- 
-    result = db.execute(
-        text("DELETE FROM sessions WHERE session_token = :session_token"),
-        {"session_token": session_token}
-    )
-    db.commit()
-
-    # Check if any session was deleted
-    if result.rowcount == 0:
-        raise HTTPException(status_code=400, detail="Invalid session token.")
-
-    # Return a response indicating the user has been logged out
-    response = JSONResponse(content={"message": "Logout successful"})
-    response.delete_cookie(
-        key="session_token",  # Remove the session cookie
-        path="/"  # Make sure the cookie is deleted from the root path
-    )
-    return response
+def get_token_from_header(authorization: str = Header(...)):
+    """
+    Dependency to extract the token from the 'Authorization' header.
+    """
+    if not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Invalid authorization header format")
+    return authorization.split(" ")[1]  # Extract the token part after "Bearer "
 
 @router.get("/user/profile")
-def get_profile(session: dict = Depends(get_session)):
-    return {"message": "This is your profile", "user_id": session.user_id}
+def get_profile(token: str = Depends(get_token_from_header)):
+    """
+    Endpoint to get user profile by decoding the JWT token.
+    """
+    # Decode and verify JWT token
+    payload = decode_access_token(token)
+    user_id = payload.get("user_id")
+
+    if not user_id:
+        raise HTTPException(status_code=400, detail="Invalid token")
+
+    return {"message": "This is your profile", "user_id": user_id}
