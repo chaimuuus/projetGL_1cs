@@ -6,6 +6,7 @@ import ArtisanSignUpPage from "./pages/Artisan/SignUpPage/SignUp";
 import LoginPage from "./pages/Login"
 import ProfileLayout from "./layouts/ProfileLayout";
 import EditProfile from "./pages/Artisan/Profile/EditProfile";
+import EditProfileUser from "./pages/Client/Profile/EditProfile";
 import Portfolio from "./pages/Artisan/Profile/Portfolio";
 import Certificate from "./pages/Artisan/Profile/Certificate";
 
@@ -31,6 +32,13 @@ const router = createBrowserRouter([
     path: "/client",
     children: [
       { path: "sign-up", element: <ClientSignUpPage /> },
+      {
+        path: "profile",
+        element: <ProfileLayout />,
+        children: [
+          { path: "edit-profile", element: <EditProfileUser /> },
+        ],
+      },
     ],
   },
   {

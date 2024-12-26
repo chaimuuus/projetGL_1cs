@@ -29,7 +29,6 @@ const EditProfile = () => {
     console.log({
       ...data,
       specialites,
-      avatar: avatar,
     });
   };
 
@@ -46,7 +45,7 @@ const EditProfile = () => {
 
   return (
     <div>
-        <div className="items-center flex gap-2 px-14">
+        <div className="items-center flex gap-3 py-2 px-14">
             <div className="relative">
                 <img
                     src={avatar}
