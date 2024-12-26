@@ -2,7 +2,7 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import OperationalError
 
-from config import DATABASE_URL
+from ..config import DATABASE_URL
 
 try:
     engine = create_engine(DATABASE_URL, echo=True)

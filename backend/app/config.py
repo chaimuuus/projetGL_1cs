@@ -5,4 +5,4 @@ import os
 load_dotenv()
 
 # Access the environment variables
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://user:pass@localhost:5432/dbname")
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:admin@localhost:5432/dzartisan")
