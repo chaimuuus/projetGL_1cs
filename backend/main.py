@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
-from .routers import example ,user ,artisan
+from app.routers import example ,user ,artisan
 from starlette.middleware.sessions import SessionMiddleware
 
 
