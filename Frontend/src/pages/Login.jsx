@@ -19,7 +19,7 @@ const Login = () => {
     <div className="flex flex-col">
       <div className="flex h-screen">
         {/* Left Section */}
-          <div className="w-1/2 p-16 py-10">
+          <div className="w-1/2 p-16 py-20">
               <div className=" bg-custom_yellow bg-opacity-20 flex flex-col p-4 items-center shadow-lg rounded-lg">
                   {/* Logo */}
                   <div className=" mb-3 ml-6 w-34 self-start">

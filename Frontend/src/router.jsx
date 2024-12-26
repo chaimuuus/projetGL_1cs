@@ -4,6 +4,10 @@ import Layout from "./layouts/layout";
 import ClientSignUpPage from "./pages/Client/SignUpPage/SignUp";
 import ArtisanSignUpPage from "./pages/Artisan/SignUpPage/SignUp";
 import LoginPage from "./pages/Login"
+import ProfileLayout from "./layouts/ProfileLayout";
+import EditProfile from "./pages/Artisan/Profile/EditProfile";
+import Portfolio from "./pages/Artisan/Profile/Portfolio";
+import Certificate from "./pages/Artisan/Profile/Certificate";
 
 const router = createBrowserRouter([
   {
@@ -33,6 +37,15 @@ const router = createBrowserRouter([
     path: "/artisan",
     children: [
       { path: "sign-up", element: <ArtisanSignUpPage /> },
+      {
+        path: "profile",
+        element: <ProfileLayout />,
+        children: [
+          { path: "edit-profile", element: <EditProfile /> },
+          { path: "portfolio", element: <Portfolio /> },
+          { path: "certificate", element: <Certificate /> },
+        ],
+      },
     ],
   },
   { path: "/Login", element: <LoginPage /> }

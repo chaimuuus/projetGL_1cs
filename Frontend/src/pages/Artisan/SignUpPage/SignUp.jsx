@@ -19,45 +19,64 @@ const SignUp = () => {
     <div className="flex flex-col">
       <div className="flex h-screen">
         {/* Left Section */}
-          <div className="w-1/2 p-16 py-10">
-              <div className=" bg-custom_yellow bg-opacity-20 flex flex-col p-4 items-center shadow-lg rounded-lg">
+          <div className="w-1/2 p-16 py-2">
+              <div className=" bg-custom_yellow bg-opacity-20 flex flex-col p-1 items-center shadow-lg rounded-lg">
                   {/* Logo */}
-                  <div className=" mb-3 ml-6 w-34 self-start">
+                  <div className=" mb-1 ml-6 w-34 self-start">
                       <img src={logo} alt="DZ-Artisan Logo" />
                       <h1 className="text-3xl ml-2 font-bold text-gray-800">DZ-Artisan</h1>
                   </div>
 
                   {/* Welcome Text */}
-                  <p className="text-lg ml-8 text-custom_green mb-4 font-medium self-start">
+                  <p className="text-lg ml-8 text-custom_green mb-1 font-medium self-start">
                   Bienvenue sur la plateforme des artisans de demain
                   </p>
 
                   {/* Form */}
                   <div className="max-w-md w-full text-sm">
                   <form onSubmit={handleSubmit(onSubmit)}>
-                      {/* Nom Complet */}
-                      <div className="mb-2">
-                      <label htmlFor="nomComplet" className="block text-sm font-medium mb-1">
-                          Nom complet
+                      {/* Nom */}
+                      <div className="mb-1">
+                      <label htmlFor="nom" className="block text-sm font-medium mb-1">
+                          Nom
                       </label>
                       <input
-                          id="nomComplet"
+                          id="nom"
                           type="text"
-                          placeholder="Nom complet"
-                          {...register("nomComplet", { required: "Le champ Nom complet est requis" })}
+                          placeholder="Nom"
+                          {...register("nom", { required: "Le champ Nom est requis" })}
                           className={`w-full border bg-transparent h-9 ${
-                          errors.nomComplet ? "border-red-500" : "border-gray-300"
+                          errors.nom ? "border-red-500" : "border-gray-300"
                           } p-2 rounded`}
                       />
-                      {errors.nomComplet && (
+                      {errors.nom && (
                           <p className="text-red-500 text-xs mt-1">
-                          {errors.nomComplet.message}
+                          {errors.nom.message}
+                          </p>
+                      )}
+                      </div>
+                      <div className="mb-1">
+                      <label htmlFor="prenom" className="block text-sm font-medium mb-1">
+                          Prénom
+                      </label>
+                      <input
+                          id="prenom"
+                          type="text"
+                          placeholder="Prénom"
+                          {...register("prenom", { required: "Le champ Prénom est requis" })}
+                          className={`w-full border bg-transparent h-9 ${
+                          errors.prenom ? "border-red-500" : "border-gray-300"
+                          } p-2 rounded`}
+                      />
+                      {errors.prenom && (
+                          <p className="text-red-500 text-xs mt-1">
+                          {errors.prenom.message}
                           </p>
                       )}
                       </div>
 
                       {/* Numéro de téléphone */}
-                      <div className="mb-2">
+                      <div className="mb-1">
                       <label htmlFor="telephone" className="block text-sm font-medium mb-1">
                           Numéro de téléphone
                       </label>
@@ -84,7 +103,7 @@ const SignUp = () => {
                       </div>
 
                       {/* Adresse Email */}
-                      <div className="mb-2">
+                      <div className="mb-1">
                       <label
                           htmlFor="email"
                           className="block text-sm font-medium mb-1"

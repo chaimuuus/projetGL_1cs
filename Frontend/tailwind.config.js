@@ -11,6 +11,16 @@ export default {
         custom_green: '#6B8E23',
         custom_grey: '#E0E0E0',
         custom_black: '#333333',
+        
+        lightYellow: 'rgba(255, 215, 0, 0.2)',
+        lightBlue: 'rgba(8, 142, 141, 1)',
+        lightGreen: 'rgba(107, 142, 35, 1)',
+        iconYellow: 'rgba(255, 215, 0, 1)',
+        lightGrey:'rgba(224, 224, 224, 1)',
+        textBlack:'rgba(114, 128, 149, 1)',
+      },
+      fontSize: {
+        iconSize: '24px', // Define a custom size for icons
       },
       fontFamily: {
         sans: ['"Open Sans"', 'sans-serif'],
