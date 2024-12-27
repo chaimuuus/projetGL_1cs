@@ -4,6 +4,7 @@ import Layout from "./layouts/layout";
 import ClientSignUpPage from "./pages/Client/SignUpPage/SignUp";
 import ArtisanSignUpPage from "./pages/Artisan/SignUpPage/SignUp";
 import LoginPage from "./pages/Login"
+import WelcomePage from "./pages/Welcome";
 import ProfileLayout from "./layouts/ProfileLayout";
 import EditProfile from "./pages/Artisan/Profile/EditProfile";
 import EditProfileUser from "./pages/Client/Profile/EditProfile";
@@ -28,6 +29,8 @@ const router = createBrowserRouter([
       */
     ],
   },
+   { path: "/login", element: <LoginPage /> },
+   { path: "/welcome", element: <WelcomePage /> },
    {
     path: "/client",
     children: [
@@ -56,7 +59,7 @@ const router = createBrowserRouter([
       },
     ],
   },
-  { path: "/Login", element: <LoginPage /> }
+
 ]);
 
 export default router;

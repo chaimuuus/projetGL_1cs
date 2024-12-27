@@ -8,8 +8,10 @@ export default {
     extend: {
       colors: {
         custom_yellow: '#FFD700',
+        custom_Lyellow: '#FFF7CC',
         custom_green: '#6B8E23',
         custom_grey: '#E0E0E0',
+        custom_Lgrey: '#C0BFBF',
         custom_black: '#333333',
         
         lightYellow: 'rgba(255, 215, 0, 0.2)',
