@@ -1,13 +1,14 @@
 from fastapi import APIRouter, HTTPException, Depends ,  Header
 from sqlalchemy.orm import Session
 from sqlalchemy import text
-from ..models.model_Artisan import Artisan_Signup, Artisan_login
+from ..models.model_Artisan import Artisan_Signup, Artisan_login , RequestedDevisResponseartisan ,ArtisanResponse,RespondedDevisResponse
 from ..Utils.hashing import hash_password, verify_password
 from ..database.db import get_db
 from datetime import datetime, timedelta, timezone
 from fastapi.responses import JSONResponse
 import jwt
 import logging
+from typing import List
 
 
 SECRET_KEY = "projetcode"
@@ -267,3 +268,208 @@ def search_artisans(keywords: str = "", db: Session = Depends(get_db)):
 
 
 ################# System de devis ####################################
+
+
+## repondre a un devis 
+@router.post("/artisan/respond_to_devis", response_model=dict)
+def respond_to_devis(
+    response: ArtisanResponse, 
+    db: Session = Depends(get_db), 
+    token: str = Depends(get_token_from_header)
+):
+    # Decode and verify the JWT token
+    payload = decode_access_token(token)
+    artisan_id = payload.get("id_artizan")
+
+    if not artisan_id:
+        raise HTTPException(status_code=400, detail="Invalid token")
+
+    # Check if the requested devis exists and is assigned to the artisan
+    devis_check = db.execute(
+        text("""
+            SELECT 1 FROM requested_devis 
+            WHERE id_rqdevis = :id_rqdevis AND artisan_id = :artisan_id
+        """),
+        {"id_rqdevis": response.id_rqdevis, "artisan_id": artisan_id}
+    ).fetchone()
+
+    if not devis_check:
+        raise HTTPException(status_code=404, detail="Requested devis not found or not assigned to this artisan")
+
+    # Insert the response into the responded_devis table
+    db.execute(
+        text("""
+            INSERT INTO responded_devis (
+                id_rqdevis, artisan_id, prix, delai_estime, 
+                service_details, remarques, id_user
+            )
+            VALUES (
+                :id_rqdevis, :artisan_id, :prix, :delai_estime, 
+                :service_details, :remarques, 
+                (SELECT id_user FROM requested_devis WHERE id_rqdevis = :id_rqdevis)
+            )
+        """),
+        {
+            "id_rqdevis": response.id_rqdevis,
+            "artisan_id": artisan_id,
+            "prix": response.prix,
+            "delai_estime": response.delai_estime,
+            "service_details": response.service_details,
+            "remarques": response.remarques
+        }
+    )
+    db.commit()
+
+    return {"message": "Response submitted successfully"}
+
+## voir la liste des devis requested to him 
+@router.get("/artisan/requested_devis", response_model=List[RequestedDevisResponseartisan])
+def get_requested_devis_for_artisan(db: Session = Depends(get_db), token: str = Depends(get_token_from_header)):
+    # Decode and verify the JWT token
+    payload = decode_access_token(token)
+    artisan_id = payload.get("id_artizan")  # Assuming artisan's ID is stored in 'artisan_id' in the payload
+
+    if not artisan_id:
+        raise HTTPException(status_code=400, detail="Invalid token")
+
+    # SQL query to fetch requested devis assigned to this artisan
+    result = db.execute(
+        text(""" 
+            SELECT 
+                rd.id_rqdevis, rd.service_demande, rd.id_user, rd.description, 
+                rd.budget_prevu, rd.date_souhaite, rd.illustrations, rd.request_date, 
+                rd.location_user, rd.statut_demande, rd.urgence
+            FROM requested_devis rd
+            WHERE rd.artisan_id = :artisan_id
+        """),
+        {"artisan_id": artisan_id}
+    )
+
+    # Fetch all rows from the result
+    requested_devis_list = result.fetchall()
+
+    # If no devis are found for the artisan, raise an exception
+    if not requested_devis_list:
+        raise HTTPException(status_code=404, detail="No devis found for this artisan")
+
+    # Convert each Row object to a dictionary before passing it to RequestedDevisResponseartisan
+    return [
+        RequestedDevisResponseartisan(**{key: value for key, value in zip(result.keys(), row)})
+        for row in requested_devis_list
+    ]
+    
+## voir la list des devis qu'il a repondu 
+@router.get("/artisan/responded_devis", response_model=List[RespondedDevisResponse])
+def get_responded_devis_for_artisan(
+    db: Session = Depends(get_db), 
+    token: str = Depends(get_token_from_header)
+):
+    # Décoder le token JWT
+    payload = decode_access_token(token)
+    artisan_id = payload.get("id_artizan")
+
+    if not artisan_id:
+        raise HTTPException(status_code=400, detail="Token invalide")
+
+    # Récupérer les devis répondus par l'artisan
+    result = db.execute(
+        text("""
+            SELECT 
+                id_rpdevis, id_rqdevis, artisan_id, prix, delai_estime, 
+                service_details, response_date, remarques, id_user
+            FROM responded_devis
+            WHERE artisan_id = :artisan_id
+        """),
+        {"artisan_id": artisan_id}
+    )
+
+    # Convertir les résultats en une liste
+    responded_devis_list = result.fetchall()
+
+    # Si aucun devis trouvé, renvoyer une erreur
+    if not responded_devis_list:
+        raise HTTPException(status_code=404, detail="Aucun devis répondu trouvé pour cet artisan")
+
+    # Retourner les devis en format JSON
+    return [
+        RespondedDevisResponse(**{key: value for key, value in zip(result.keys(), row)})
+        for row in responded_devis_list
+    ]
+    
+## Supprimer un devis dont il a repondu "s'il a regreté zaema "
+@router.delete("/artisan/responded_devis/{response_id}")
+def delete_responded_devis_for_artisan(
+    response_id: int,
+    db: Session = Depends(get_db),
+    token: str = Depends(get_token_from_header),
+):
+    # Décoder le token JWT
+    payload = decode_access_token(token)
+    artisan_id = payload.get("id_artizan")
+
+    if not artisan_id:
+        raise HTTPException(status_code=400, detail="Token invalide")
+
+    # Vérifier si le devis existe et appartient à cet artisan
+    result = db.execute(
+        text("""
+            SELECT id_rpdevis 
+            FROM responded_devis 
+            WHERE id_rpdevis = :response_id AND artisan_id = :artisan_id
+        """),
+        {"response_id": response_id, "artisan_id": artisan_id}
+    ).fetchone()
+
+    if not result:
+        raise HTTPException(
+            status_code=404, 
+            detail="Devis introuvable ou non autorisé"
+        )
+
+    # Supprimer le devis
+    db.execute(
+        text("DELETE FROM responded_devis WHERE id_rpdevis = :response_id"),
+        {"response_id": response_id}
+    )
+    db.commit()
+
+    return {"message": "Devis supprimé avec succès", "id": response_id}
+
+## suprimer requested_devis from his list 
+@router.delete("/artisan/requested_devis/{request_id}")
+def delete_requested_devis_for_artisan(
+    request_id: int,
+    db: Session = Depends(get_db),
+    token: str = Depends(get_token_from_header),
+):
+    # Décoder le token JWT
+    payload = decode_access_token(token)
+    artisan_id = payload.get("id_artizan")
+
+    if not artisan_id:
+        raise HTTPException(status_code=400, detail="Token invalide")
+
+    # Vérifier si le devis existe et appartient à cet artisan
+    result = db.execute(
+        text("""
+            SELECT id_rqdevis 
+            FROM requested_devis 
+            WHERE id_rqdevis = :request_id AND artisan_id = :artisan_id
+        """),
+        {"request_id": request_id, "artisan_id": artisan_id}
+    ).fetchone()
+
+    if not result:
+        raise HTTPException(
+            status_code=404,
+            detail="Devis demandé introuvable ou non autorisé"
+        )
+
+    # Supprimer le devis
+    db.execute(
+        text("DELETE FROM requested_devis WHERE id_rqdevis = :request_id"),
+        {"request_id": request_id}
+    )
+    db.commit()
+
+    return {"message": "Devis demandé supprimé avec succès", "id": request_id}
