@@ -99,7 +99,8 @@ def artisan_login(artisan_data: Artisan_login, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Invalid email or password.")
 
     # Verify the provided password with the stored hashed password
-    if not verify_password(artisan_data.password, artisan[6]):
+    print(artisan)
+    if not verify_password(artisan_data.password, artisan[5]):
         raise HTTPException(status_code=400, detail="Invalid email or password.")
 
     # Generate JWT token
@@ -113,13 +114,13 @@ def artisan_login(artisan_data: Artisan_login, db: Session = Depends(get_db)):
 
 
 
-def get_token_from_header(authorization: str = Header(...)):
+def get_token_from_header(token: str = Header(...)):
     """
     Dependency to extract the token from the 'Authorization' header.
     """
-    if not authorization.startswith("Bearer "):
+    if not token.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Invalid authorization header format")
-    return authorization.split(" ")[1]  # Extract the token part after "Bearer "
+    return token.split(" ")[1]  # Extract the token part after "Bearer "
 
 @router.get("/artisan/profile")
 def get_profile(token: str = Depends(get_token_from_header)):

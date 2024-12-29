@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException, Depends , Header
+import jwt.utils
 from sqlalchemy.orm import Session  
 from sqlalchemy import text
 from ..models.model_User import User_signup, User_login
@@ -108,13 +109,13 @@ def user_login(user_data: User_login, db: Session = Depends(get_db)):
 
     return {"access_token": access_token, "token_type": "bearer"}
 
-def get_token_from_header(authorization: str = Header(...)):
+def get_token_from_header(token: str = Header(...)):
     """
     Dependency to extract the token from the 'Authorization' header.
     """
-    if not authorization.startswith("Bearer "):
+    if not token.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Invalid authorization header format")
-    return authorization.split(" ")[1]  # Extract the token part after "Bearer "
+    return token.split(" ")[1]  # Extract the token part after "Bearer "
 
 @router.get("/user/profile")
 def get_profile(token: str = Depends(get_token_from_header)):

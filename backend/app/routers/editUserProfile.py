@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends,UploadFile, File
 from sqlalchemy.orm import Session  
 from sqlalchemy import text
 from ..models.editFormUser import Edit_form_user
-from .user import get_session
+from .user import get_profile
 from ..database.db import get_db
 from ..Utils.hashing import hash_password
 from pathlib import Path
@@ -17,10 +17,10 @@ UPLOAD_DIRECTORY.mkdir(parents=True, exist_ok=True)
 
 
 @router.patch('/user/editprofile')
-async def editUserProfile(formdata: Edit_form_user, session: dict = Depends(get_session), db: Session = Depends(get_db)):
+async def editUserProfile(formdata: Edit_form_user, profile: dict = Depends(get_profile), db: Session = Depends(get_db)):
     updates = []
     params = {}
-    
+ 
     # Check for each field and add to the updates and params dictionaries
     if formdata.user_name:
         updates.append("user_name = :user_name")
@@ -57,7 +57,7 @@ async def editUserProfile(formdata: Edit_form_user, session: dict = Depends(get_
     """)
     
     # Add the user_id to the params
-    params["user_id"] = session.user_id
+    params["user_id"] = profile.get("user_id")
     
     # Execute the update query
     result = db.execute(query, params)
@@ -70,20 +70,20 @@ async def editUserProfile(formdata: Edit_form_user, session: dict = Depends(get_
 
 
 @router.patch('/user/updateProfilePic')
-async def updateProfilePic(profilePic : UploadFile = File(...),db : Session = Depends      (get_db),session: dict = Depends(get_session) ):
-    file_name = str(session.user_id)+profilePic.filename
+async def updateProfilePic(profilePic : UploadFile = File(...),db : Session = Depends      (get_db),profile: dict = Depends(get_profile) ):
+    file_name = str(profile.get("user_id"))+profilePic.filename
     file_location = UPLOAD_DIRECTORY /file_name
 
 
     with open(file_location , 'wb') as f:
         f.write(await profilePic.read())
-    print("session is :",session)
+    
     query = text("""
                 UPDATE users
                  SET image_file = :file_location
                  WHERE id_user = :id_user
                  """)
-    result = db.execute(query,{"file_location" : str(file_location),"id_user" : session.user_id})
+    result = db.execute(query,{"file_location" : str(file_location),"id_user" : profile.get("user_id")})
     db.commit()
 
     return {"message": f"File {profilePic.filename} has been updated"}
