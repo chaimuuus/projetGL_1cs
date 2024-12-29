@@ -65,6 +65,7 @@ const Portfolio = () =>{
                             type="file"
                             {...register("illustration")}
                             accept=".jpg,.png,.pdf"
+                            multiple 
                             className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-green-300"
                         />
                         <p className="text-sm text-gray-500 mt-2">Veuillez insérer un fichier au format JPG, PNG ou PDF, avec une taille maximale de 5 Mo.</p>
