@@ -13,6 +13,7 @@ export default {
         custom_grey: '#E0E0E0',
         custom_Lgrey: '#C0BFBF',
         custom_black: '#333333',
+        custom_blue: '#0F2744',
         
         lightYellow: 'rgba(255, 215, 0, 0.2)',
         lightBlue: 'rgba(8, 142, 141, 1)',

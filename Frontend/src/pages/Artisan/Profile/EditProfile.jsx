@@ -7,7 +7,7 @@ import { MdOutlineEdit } from "react-icons/md";
 const EditProfile = () => {
 
     const [avatar, setAvatar] = useState(AvatarPlaceholder);
-      
+
     const handleImageUpload = (e) => {
         const file = e.target.files[0];
         if (file) {
@@ -21,6 +21,8 @@ const EditProfile = () => {
 
   const { register, handleSubmit, resetField, watch } = useForm();
   const [specialites, setSpecialites] = useState([]);
+  const predefinedSpecialites = ["Plomberie", "Électricité", "Chauffage", "Climatisation"];
+
 
   const specialiteInput = watch("specialiteInput", "");
 
@@ -77,88 +79,93 @@ const EditProfile = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Nom */}
             <div>
-            <label className="block text-sm font-medium text-gray-700">Nom</label>
+            <label className="block text-sm font-semibold text-custom_blue">Nom</label>
             <input
                 type="text"
                 {...register("nom")}
                 placeholder="Boukalfa"
-                className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-green-300"
+                className="mt-1 block w-full px-4 py-2 border border-gray-300 bg-transparent rounded-md shadow-sm focus:outline-green-300"
             />
             </div>
 
             {/* Prénom */}
             <div>
-            <label className="block text-sm font-medium text-gray-700">Prénom</label>
+            <label className="block text-sm font-semibold text-custom_blue">Prénom</label>
             <input
                 type="text"
                 {...register("prenom")}
                 placeholder="Rachid"
-                className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-green-300"
+                className="mt-1 block w-full px-4 py-2 border bg-transparent border-gray-300 rounded-md shadow-sm focus:outline-green-300"
             />
             </div>
 
             {/* Email */}
             <div>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-semibold text-custom_blue">
                 Adresse email
             </label>
             <input
                 type="email"
                 {...register("email")}
                 placeholder="exemple@gmail.com"
-                className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-green-300"
+                className="mt-1 block w-full px-4 py-2 border bg-transparent border-gray-300 rounded-md shadow-sm focus:outline-green-300"
             />
             </div>
 
             {/* Téléphone */}
             <div>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-semibold text-custom_blue">
                 Numéro de téléphone
             </label>
             <input
                 type="tel"
                 {...register("telephone")}
                 placeholder="06 79 88 34 45"
-                className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-green-300"
+                className="mt-1 block w-full px-4 py-2 border bg-transparent border-gray-300 rounded-md shadow-sm focus:outline-green-300"
             />
             </div>
 
             {/* Localisation */}
             <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-semibold text-custom_blue">
                 Localisation
             </label>
             <input
                 type="text"
                 {...register("localisation")}
                 placeholder="Cité des Frères Abbas, Bloc A, Constantine"
-                className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-green-300"
+                className="mt-1 block w-full px-4 py-2 border bg-transparent border-gray-300 rounded-md shadow-sm focus:outline-green-300"
             />
             </div>
 
             {/* Métier */}
             <div>
-            <label className="block text-sm font-medium text-gray-700">Métier</label>
+            <label className="block text-sm font-semibold text-custom_blue">Métier</label>
             <input
                 type="text"
                 {...register("metier")}
                 placeholder="Saisissez votre métier..."
-                className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-green-300"
+                className="mt-1 block w-full px-4 py-2 border bg-transparent border-gray-300 rounded-md shadow-sm focus:outline-green-300"
             />
             </div>
 
             {/* Spécialité */}
             <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-semibold text-custom_blue">
                 Spécialité
             </label>
             <div className="flex gap-2 mt-1">
-                <input
-                type="text"
+            <select
                 {...register("specialiteInput")}
-                placeholder="Saisissez un domaine..."
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-green-300"
-                />
+                className="mt-1 block w-full px-4 py-2 bg-transparent border border-gray-300 rounded-md shadow-sm focus:outline-green-300"
+            >
+                <option value="">Sélectionnez un domaine...</option>
+                    {predefinedSpecialites.map((specialite, index) => (
+                    <option key={index} value={specialite}>
+                        {specialite}
+                    </option>
+                    ))}
+                    </select>
                 <button
                 type="button"
                 onClick={handleAddSpecialite}
