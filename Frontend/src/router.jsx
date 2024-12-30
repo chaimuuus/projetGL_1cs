@@ -10,6 +10,7 @@ import EditProfile from "./pages/Artisan/Profile/EditProfile";
 import EditProfileUser from "./pages/Client/Profile/EditProfile";
 import Portfolio from "./pages/Artisan/Profile/Portfolio";
 import Certificate from "./pages/Artisan/Profile/Certificate";
+import Messagerie from "./pages/chat/Messagerie";
 
 const router = createBrowserRouter([
   {
@@ -31,6 +32,7 @@ const router = createBrowserRouter([
   },
    { path: "/login", element: <LoginPage /> },
    { path: "/welcome", element: <WelcomePage /> },
+   { path: "messagerie", element: <Messagerie /> },
    {
     path: "/client",
     children: [
