@@ -12,6 +12,9 @@ import Portfolio from "./pages/Artisan/Profile/Portfolio";
 import Certificate from "./pages/Artisan/Profile/Certificate";
 import Messagerie from "./pages/chat/Messagerie";
 
+import Planification from "./pages/planification";
+import Agenda from "./pages/Agenda";
+
 const router = createBrowserRouter([
   {
     path: "/",
@@ -32,7 +35,9 @@ const router = createBrowserRouter([
   },
    { path: "/login", element: <LoginPage /> },
    { path: "/welcome", element: <WelcomePage /> },
-   { path: "messagerie", element: <Messagerie /> },
+   { path: "/messagerie", element: <Messagerie /> },
+   { path: "/planification", element: <Planification /> },
+   { path: "/agenda", element: <Agenda /> },
    {
     path: "/client",
     children: [

@@ -5,7 +5,7 @@ import Sidebar from '../../components/Sidebar';
 import { FaCirclePlus } from "react-icons/fa6";
 import { BsFillSendFill } from "react-icons/bs";
 import { IoImageOutline } from "react-icons/io5";
-import { CiCamera, CiVideoOn, CiFileOn } from "react-icons/ci";
+import { CiVideoOn, CiFileOn } from "react-icons/ci";
 import avatar from "../../assets/avatar3.png"
 
 const Messagerie = () => {
@@ -101,7 +101,7 @@ const Messagerie = () => {
 
             <div className="flex flex-1 pt-16">
                 {/* Sidebar */}
-                <div className="fixed top-16 left-0 h-full z-40 transition-all duration-300 ease-in-out">
+                <div className="fixed top-0 left-0 h-full z-40 transition-all duration-300 ease-in-out">
                     <Sidebar isExpanded={false} />
                 </div>
 

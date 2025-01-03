@@ -27,6 +27,7 @@ export default {
       },
       fontFamily: {
         sans: ['"Open Sans"', 'sans-serif'],
+        'exo2': ['Exo 2', 'sans-serif'],
       },
     },
   },
