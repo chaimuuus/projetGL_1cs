@@ -134,7 +134,9 @@ const Messagerie = () => {
                                         className={`flex justify-${message.sender === 'user1' ? 'start' : 'end'}`}
                                     >
                                         <div
-                                            className={`bg-${message.sender === 'user1' ? 'yellow-200' : 'yellow-100'} p-3 rounded-3xl rounded-tl-none max-w-xs`}
+                                            className={`p-3 rounded-3xl rounded-tl-none max-w-xs ${
+                                                message.sender === 'user1' ? 'bg-yellow-200' : 'bg-yellow-100'
+                                            }`}
                                         >
                                             {message.text && <p>{message.text}</p>}
                                             {message.image && (
