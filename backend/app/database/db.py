@@ -3,6 +3,9 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import OperationalError
 
 from ..config import DATABASE_URL
+from sqlalchemy.ext.declarative import declarative_base
+
+Base = declarative_base()
 
 try:
     engine = create_engine(DATABASE_URL, echo=True)

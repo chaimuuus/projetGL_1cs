@@ -10,7 +10,7 @@ from datetime import date
 router = APIRouter()
 # Define the upload directory
 UPLOAD_DIRECTORY = Path.cwd()/"uploads"/"artisans"/"certificats"
-
+SAVE_PATH = "uploads/artisans/certificats"
 # Ensure the directory exists
 UPLOAD_DIRECTORY.mkdir(parents=True, exist_ok=True)
 
@@ -51,7 +51,7 @@ async def addCertificat(
         VALUES (:title, :institution, :description, :obtaining_date,:image_file, :artisan_id)
         RETURNING certificat_id;
     """)
-    result = db.execute(query,{"title" :title,"institution" : institution,"description":description,"obtaining_date":obtaining_date,"image_file":str(file_location),"artisan_id":profile.get("artisan_id")})
+    result = db.execute(query,{"title" :title,"institution" : institution,"description":description,"obtaining_date":obtaining_date,"image_file":SAVE_PATH+"/"+str(file_name),"artisan_id":profile.get("artisan_id")})
 
     db.commit()
 
@@ -107,7 +107,7 @@ async def editCertificat(
         with open(file_location , 'wb') as f:
             f.write(await image_file.read())
         updates.append("image_file = :image_file")
-        params["image_file"] = str(file_location)
+        params["image_file"] = SAVE_PATH+"/"+str(file_name)
     
     
     

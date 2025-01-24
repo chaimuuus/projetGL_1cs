@@ -11,6 +11,7 @@ router = APIRouter()
 
 # Define the upload directory
 UPLOAD_DIRECTORY = Path.cwd()/"uploads"/"users"/"profilePic"
+SAVE_PATH = "uploads/users/profilePic"
 
 # Ensure the directory exists
 UPLOAD_DIRECTORY.mkdir(parents=True, exist_ok=True)
@@ -83,7 +84,7 @@ async def updateProfilePic(profilePic : UploadFile = File(...),db : Session = De
                  SET image_file = :file_location
                  WHERE id_user = :id_user
                  """)
-    result = db.execute(query,{"file_location" : str(file_location),"id_user" : profile.get("user_id")})
+    result = db.execute(query,{"file_location" : SAVE_PATH+"/"+str(file_name),"id_user" : profile.get("user_id")})
     db.commit()
 
     return {"message": f"File {profilePic.filename} has been updated"}

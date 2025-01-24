@@ -11,3 +11,8 @@ class Artisan_Signup(BaseModel):
 class Artisan_login(BaseModel):
     email: EmailStr
     password: str
+
+
+class loginRes(BaseModel):
+    token : str
+    type_token : str

@@ -8,7 +8,7 @@ from pathlib import Path
 router = APIRouter()
 # Define the upload directory
 UPLOAD_DIRECTORY = Path.cwd()/"uploads"/"artisans"/"projects"
-
+SAVE_PATH = "uploads/artisans/projects"
 # Ensure the directory exists
 UPLOAD_DIRECTORY.mkdir(parents=True, exist_ok=True)
 
@@ -45,10 +45,10 @@ async def addProject(
     
     query = text("""
         INSERT INTO projects (title, image_file, description, price, artisan_id)
-        VALUES (:titre, :image_file, :description, :price, :artisan_id)
+        VALUES (:title, :image_file, :description, :price, :artisan_id)
         RETURNING project_id;
     """)
-    result = db.execute(query,{"title" :title,"image_file" : str(file_location),"description":description,"price":price,"artisan_id":profile.get("artisan_id")})
+    result = db.execute(query,{"title" :title,"image_file" : SAVE_PATH+"/"+str(file_name),"description":description,"price":price,"artisan_id":profile.get("artisan_id")})
 
     db.commit()
 
@@ -78,6 +78,7 @@ async def editProject(
     image_file: Union[UploadFile, str] = File(None),
     profile: dict = Depends(get_profile),
     db: Session = Depends(get_db)
+
 ):
     updates = []
     params = {}
@@ -100,7 +101,7 @@ async def editProject(
         with open(file_location , 'wb') as f:
             f.write(await image_file.read())
         updates.append("image_file = :image_file")
-        params["image_file"] = str(file_location)
+        params["image_file"] = SAVE_PATH+"/"+str(file_name)
     
     
     

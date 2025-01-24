@@ -12,12 +12,13 @@ router = APIRouter()
 
 # Define the upload directory
 UPLOAD_DIRECTORY = Path.cwd()/"uploads"/"artisans"/"profilePic"
+SAVE_PATH = "uploads/artisans/profilePic"
 
 # Ensure the directory exists
 UPLOAD_DIRECTORY.mkdir(parents=True, exist_ok=True)
 
 @router.patch('/artisan/editprofile')
-async def editUserProfile(formdata: Edit_form_artisan, profile: dict = Depends(get_profile), db: Session = Depends(get_db)):
+async def editArtisanProfile(formdata: Edit_form_artisan, profile: dict = Depends(get_profile), db: Session = Depends(get_db)):
     updates = []
     params = {}
  
@@ -93,7 +94,7 @@ async def updateProfilePic(profilePic : UploadFile = File(...),db : Session = De
                  SET image_file = :file_location
                  WHERE artisan_id = :artisan_id
                  """)
-    result = db.execute(query,{"file_location" : str(file_location),"artisan_id" : profile.get("artisan_id")})
+    result = db.execute(query,{"file_location" : SAVE_PATH+"/"+str(file_name),"artisan_id" : profile.get("artisan_id")})
     db.commit()
 
     return {"message": f"File {profilePic.filename} has been updated"}
@@ -124,6 +125,7 @@ async def getArtisanSpecialites(profile: dict = Depends(get_profile), db: Sessio
 """)
     result = db.execute(query,{"artisan_id":profile.get("artisan_id")}).fetchall()
 
+        
     return[row._mapping for row in result]
 
 @router.delete('/artisan/removeSpecialite')
@@ -138,4 +140,4 @@ async def removeSpecialite(specialite_id : int ,profile: dict = Depends(get_prof
     result = db.execute(query,{"specialite_id":specialite_id,"artisan_id":profile.get("artisan_id")})
     db.commit()
 
-    return {"message":"specialite has been removed "}
+    return {"message":"specialite has been removed"}
