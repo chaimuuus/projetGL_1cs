@@ -2,7 +2,7 @@ from typing import Union
 from fastapi import APIRouter, HTTPException, Depends,UploadFile, File , Form
 from sqlalchemy.orm import Session  
 from sqlalchemy import text
-from .artisan import get_profile
+from .artisan import get_artisan_profile
 from ..database.db import get_db
 from pathlib import Path
 from datetime import date
@@ -15,7 +15,7 @@ SAVE_PATH = "uploads/artisans/certificats"
 UPLOAD_DIRECTORY.mkdir(parents=True, exist_ok=True)
 
 @router.get('/artisan/getCertificats')
-async def getCertificats(profile: dict = Depends(get_profile),
+async def getCertificats(profile: dict = Depends(get_artisan_profile),
     db: Session = Depends(get_db)):
 
     query = text("""
@@ -37,7 +37,7 @@ async def addCertificat(
     description : str = Form(...),
     obtaining_date : date = Form(...),
     image_file: UploadFile = File(...),
-    profile: dict = Depends(get_profile),
+    profile: dict = Depends(get_artisan_profile),
     db: Session = Depends(get_db)):
     
     file_name = str(profile.get("artisan_id"))+image_file.filename
@@ -59,7 +59,7 @@ async def addCertificat(
 
 #tofix
 @router.delete('/artisan/deleteCertificat')
-async def deleteCertificat(certificat_id:int ,profile: dict = Depends(get_profile),
+async def deleteCertificat(certificat_id:int ,profile: dict = Depends(get_artisan_profile),
     db: Session = Depends(get_db)):
      
      query = text("""
@@ -80,7 +80,7 @@ async def editCertificat(
     description : str = Form(None),
     obtaining_date : Union[date,str] = Form(None),
     image_file: Union[UploadFile, str] = File(None),
-    profile: dict = Depends(get_profile),
+    profile: dict = Depends(get_artisan_profile),
     db: Session = Depends(get_db)
 ):
     updates = []

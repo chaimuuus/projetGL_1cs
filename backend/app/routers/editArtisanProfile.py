@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends,UploadFile, File
 from sqlalchemy.orm import Session  
 from sqlalchemy import text
 from ..models.editFormArtisan import Edit_form_artisan
-from .artisan import get_profile
+from .artisan import get_artisan_profile
 from ..database.db import get_db
 from ..Utils.hashing import hash_password
 from pathlib import Path
@@ -18,7 +18,7 @@ SAVE_PATH = "uploads/artisans/profilePic"
 UPLOAD_DIRECTORY.mkdir(parents=True, exist_ok=True)
 
 @router.patch('/artisan/editprofile')
-async def editArtisanProfile(formdata: Edit_form_artisan, profile: dict = Depends(get_profile), db: Session = Depends(get_db)):
+async def editArtisanProfile(formdata: Edit_form_artisan, profile: dict = Depends(get_artisan_profile), db: Session = Depends(get_db)):
     updates = []
     params = {}
  
@@ -68,7 +68,7 @@ async def editArtisanProfile(formdata: Edit_form_artisan, profile: dict = Depend
     """)
     
     # Add the user_id to the params
-    params["artisan_id"] = profile.get("artisan_id")
+    params["artisan_id"] = profile["artisan"]["id"]
     
     # Execute the update query
     result = db.execute(query, params)
@@ -80,9 +80,9 @@ async def editArtisanProfile(formdata: Edit_form_artisan, profile: dict = Depend
     return {"status": "success", "message": "artisan updated successfully"}
 
 @router.patch('/artisan/updateProfilePic')
-async def updateProfilePic(profilePic : UploadFile = File(...),db : Session = Depends      (get_db),profile: dict = Depends(get_profile) ):
+async def updateProfilePic(profilePic : UploadFile = File(...),db : Session = Depends      (get_db),profile: dict = Depends(get_artisan_profile) ):
 
-    file_name = str(profile.get("artisan_id"))+profilePic.filename
+    file_name = str(profile["artisan"]["id"])+profilePic.filename
     file_location = UPLOAD_DIRECTORY /file_name
 
 
@@ -94,14 +94,14 @@ async def updateProfilePic(profilePic : UploadFile = File(...),db : Session = De
                  SET image_file = :file_location
                  WHERE artisan_id = :artisan_id
                  """)
-    result = db.execute(query,{"file_location" : SAVE_PATH+"/"+str(file_name),"artisan_id" : profile.get("artisan_id")})
+    result = db.execute(query,{"file_location" : SAVE_PATH+"/"+str(file_name),"artisan_id" : profile["artisan"]["id"]})
     db.commit()
 
     return {"message": f"File {profilePic.filename} has been updated"}
 
 
 @router.patch('/artisan/addSpecialite')
-async def addSpecialite(specialites : list[int] | None = None ,profile: dict = Depends(get_profile), db: Session = Depends(get_db)):
+async def addSpecialite(specialites : list[int] | None = None ,profile: dict = Depends(get_artisan_profile), db: Session = Depends(get_db)):
 
     if len(specialites) == 0:
             raise HTTPException(status_code=400, detail="No fields provided to add.")
@@ -109,13 +109,13 @@ async def addSpecialite(specialites : list[int] | None = None ,profile: dict = D
     for specialite in specialites:
         query = text("""INSERT INTO artisan_specialite (artisan_id , specialite_id) VALUES (:artisan_id ,:specialite_id)
         ON CONFLICT (artisan_id, specialite_id) DO NOTHING """)
-        db.execute(query,{"artisan_id":profile.get("artisan_id"),"specialite_id":specialite})
+        db.execute(query,{"artisan_id":profile["artisan"]["id"],"specialite_id":specialite})
     db.commit()
     
     return{"status":"specialites added"}
 
 @router.get('/artisan/getSpecialites')
-async def getArtisanSpecialites(profile: dict = Depends(get_profile), db: Session = Depends(get_db)):
+async def getArtisanSpecialites(profile: dict = Depends(get_artisan_profile), db: Session = Depends(get_db)):
 
     query = text("""
             SELECT specialites.name, specialites.specialite_id FROM specialites
@@ -123,13 +123,14 @@ async def getArtisanSpecialites(profile: dict = Depends(get_profile), db: Sessio
             ON specialites.specialite_id = artisan_specialite.specialite_id
             WHERE artisan_id = :artisan_id
 """)
-    result = db.execute(query,{"artisan_id":profile.get("artisan_id")}).fetchall()
+    print(profile)
+    result = db.execute(query,{"artisan_id":profile["artisan"]["id"]}).fetchall()
 
         
     return[row._mapping for row in result]
 
 @router.delete('/artisan/removeSpecialite')
-async def removeSpecialite(specialite_id : int ,profile: dict = Depends(get_profile), db: Session = Depends(get_db)):
+async def removeSpecialite(specialite_id : int ,profile: dict = Depends(get_artisan_profile), db: Session = Depends(get_db)):
     
     
     query = text("""
@@ -137,7 +138,7 @@ async def removeSpecialite(specialite_id : int ,profile: dict = Depends(get_prof
     WHERE specialite_id = :specialite_id AND artisan_id = :artisan_id
     """)
 
-    result = db.execute(query,{"specialite_id":specialite_id,"artisan_id":profile.get("artisan_id")})
+    result = db.execute(query,{"specialite_id":specialite_id,"artisan_id":profile["artisan"]["id"]})
     db.commit()
 
     return {"message":"specialite has been removed"}

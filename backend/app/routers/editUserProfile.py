@@ -58,7 +58,7 @@ async def editUserProfile(formdata: Edit_form_user, profile: dict = Depends(get_
     """)
     
     # Add the user_id to the params
-    params["user_id"] = profile.get("user_id")
+    params["user_id"] = profile["user"]["id"]
     
     # Execute the update query
     result = db.execute(query, params)
@@ -72,7 +72,7 @@ async def editUserProfile(formdata: Edit_form_user, profile: dict = Depends(get_
 
 @router.patch('/user/updateProfilePic')
 async def updateProfilePic(profilePic : UploadFile = File(...),db : Session = Depends      (get_db),profile: dict = Depends(get_profile) ):
-    file_name = str(profile.get("user_id"))+profilePic.filename
+    file_name = str(profile["artisan"]["id"])+profilePic.filename
     file_location = UPLOAD_DIRECTORY /file_name
 
 
@@ -84,7 +84,7 @@ async def updateProfilePic(profilePic : UploadFile = File(...),db : Session = De
                  SET image_file = :file_location
                  WHERE id_user = :id_user
                  """)
-    result = db.execute(query,{"file_location" : SAVE_PATH+"/"+str(file_name),"id_user" : profile.get("user_id")})
+    result = db.execute(query,{"file_location" : SAVE_PATH+"/"+str(file_name),"id_user" : profile["artisan"]["id"]})
     db.commit()
 
     return {"message": f"File {profilePic.filename} has been updated"}

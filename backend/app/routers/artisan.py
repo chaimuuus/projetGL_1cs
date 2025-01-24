@@ -150,10 +150,10 @@ def get_artisan_profile(token: str = Depends(get_token_from_header), db: Session
     # Retrieve the artisan information from the database
     artisan = db.execute(
         text("""
-            SELECT id_artizan, full_name, metier, specialite, phone_number, email, image_file, 
+            SELECT artisan_id, full_name, metier, phone_number, email, image_file, 
             localisation, disponibilite 
             FROM artisans 
-            WHERE id_artizan = :id_artizan
+            WHERE artisan_id = :id_artizan
         """),
         {"id_artizan": id_artizan}
     ).fetchone()
@@ -168,12 +168,11 @@ def get_artisan_profile(token: str = Depends(get_token_from_header), db: Session
             "id": artisan[0],
             "full_name": artisan[1],
             "metier": artisan[2],
-            "specialite": artisan[3],
-            "phone_number": artisan[4],
-            "email": artisan[5],
-            "image_file": artisan[6],
-            "localisation": artisan[7],
-            "disponibilite": artisan[8]
+            "phone_number": artisan[3],
+            "email": artisan[4],
+            "image_file": artisan[5],
+            "localisation": artisan[6],
+            "disponibilite": artisan[7]
         }
     }
 

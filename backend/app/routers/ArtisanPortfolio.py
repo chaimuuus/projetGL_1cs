@@ -2,7 +2,7 @@ from typing import Optional, Union
 from fastapi import APIRouter, HTTPException, Depends,UploadFile, File , Form
 from sqlalchemy.orm import Session  
 from sqlalchemy import text
-from .artisan import get_profile
+from .artisan import get_artisan_profile
 from ..database.db import get_db
 from pathlib import Path 
 router = APIRouter()
@@ -13,7 +13,7 @@ SAVE_PATH = "uploads/artisans/projects"
 UPLOAD_DIRECTORY.mkdir(parents=True, exist_ok=True)
 
 @router.get('/artisan/getProjects')
-async def getProjects(profile: dict = Depends(get_profile),
+async def getProjects(profile: dict = Depends(get_artisan_profile),
     db: Session = Depends(get_db)):
 
     query = text("""
@@ -21,7 +21,7 @@ async def getProjects(profile: dict = Depends(get_profile),
         FROM projects
         WHERE artisan_id = :artisan_id;
     """)
-    result = db.execute(query, {"artisan_id": profile.get("artisan_id")}).fetchall()
+    result = db.execute(query, {"artisan_id": profile["artisan"]["id"]}).fetchall()
     if not result:
             raise HTTPException(status_code=404, detail="No projects found for this artisan")
     return [dict(row._mapping) for row in result]
@@ -34,10 +34,10 @@ async def addProject(
     description: str = Form(...),
     price: float = Form(...),
     image_file: UploadFile = File(...),
-    profile: dict = Depends(get_profile),
+    profile: dict = Depends(get_artisan_profile),
     db: Session = Depends(get_db)):
     
-    file_name = str(profile.get("artisan_id"))+image_file.filename
+    file_name = str(profile["artisan"]["id"])+image_file.filename
     file_location = UPLOAD_DIRECTORY /file_name
 
     with open(file_location , 'wb') as f:
@@ -48,7 +48,7 @@ async def addProject(
         VALUES (:title, :image_file, :description, :price, :artisan_id)
         RETURNING project_id;
     """)
-    result = db.execute(query,{"title" :title,"image_file" : SAVE_PATH+"/"+str(file_name),"description":description,"price":price,"artisan_id":profile.get("artisan_id")})
+    result = db.execute(query,{"title" :title,"image_file" : SAVE_PATH+"/"+str(file_name),"description":description,"price":price,"artisan_id":profile["artisan"]["id"]})
 
     db.commit()
 
@@ -56,7 +56,7 @@ async def addProject(
 
 
 @router.delete('/artisan/deleteProject')
-async def deleteProject(project_id:int ,profile: dict = Depends(get_profile),
+async def deleteProject(project_id:int ,profile: dict = Depends(get_artisan_profile),
     db: Session = Depends(get_db)):
      
      query = text("""
@@ -76,7 +76,7 @@ async def editProject(
     description: str = Form(None) ,
     price:  Union[str, None]  = Form(None),
     image_file: Union[UploadFile, str] = File(None),
-    profile: dict = Depends(get_profile),
+    profile: dict = Depends(get_artisan_profile),
     db: Session = Depends(get_db)
 
 ):
@@ -95,7 +95,7 @@ async def editProject(
         params["price"] = price
     
     if image_file:
-        file_name = str(profile.get("artisan_id"))+image_file.filename
+        file_name = str(profile["artisan"]["id"])+image_file.filename
         print("hello")
         file_location = UPLOAD_DIRECTORY /file_name
         with open(file_location , 'wb') as f:
