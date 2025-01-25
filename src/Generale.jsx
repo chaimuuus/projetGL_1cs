@@ -17,7 +17,7 @@ function Generale() {
     
   return (
         <div style={{backgroundColor:'rgba(249, 249, 249, 1)'}}
-                    className='bg-slate-300 flex-1 mt-0  p-6'>
+                    className='bg-slate-300 flex-1 h-full mt-0  p-6'>
                         <div className="flex flex-row gap-4">
                             <img 
                                 className='h-40 w-40 p-1 bg-gradient-to-r from-lightBlue via-lightGreen to-lightYellow rounded-full'
