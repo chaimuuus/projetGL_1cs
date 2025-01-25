@@ -5,4 +5,4 @@ import os
 load_dotenv()
 
 # Access the environment variables
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:admin@localhost:5432/dzartisan")
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:admin@host.docker.internal:5432/dzartisan")

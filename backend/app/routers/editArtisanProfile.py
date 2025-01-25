@@ -109,7 +109,7 @@ async def addSpecialite(specialites : list[int] | None = None ,profile: dict = D
     for specialite in specialites:
         query = text("""INSERT INTO artisan_specialite (artisan_id , specialite_id) VALUES (:artisan_id ,:specialite_id)
         ON CONFLICT (artisan_id, specialite_id) DO NOTHING """)
-        db.execute(query,{"artisan_id":profile["artisan"]["id"],"specialite_id":specialite})
+        db.execute(query,{"artisan_id":profile["artisan"]["id"],"specialite_id":specialite,})
     db.commit()
     
     return{"status":"specialites added"}
@@ -142,3 +142,23 @@ async def removeSpecialite(specialite_id : int ,profile: dict = Depends(get_arti
     db.commit()
 
     return {"message":"specialite has been removed"}
+
+@router.get("/artisan/getMetierSpecialites")
+async def getMetierSpecialites(metier : int, db: Session = Depends(get_db)):
+    query = text("""
+    SELECT * FROM specialites
+    WHERE metier_id = :metier_id
+    """)
+    result = db.execute(query,{"metier_id":metier}).fetchall()
+
+    return[row._mapping for row in result]
+
+@router.get("/artisan/getMetiers")
+async def getMetiers(db: Session = Depends(get_db)):
+
+    query = text("""
+   SELECT * FROM metier
+    """)
+    result = db.execute(query).fetchall()
+    return[row._mapping for row in result]
+

@@ -6,11 +6,11 @@ from app.main import app  # Your FastAPI app
 
 # Mocked profile data (as returned by get_profile)
 def mock_get_profile(token: str):
-    return {"artisan_id": 1}  # Mocked artisan profile data
+    return {"artisan_id": 6}  # Mocked artisan profile data
 
 # Mocked JWT decoding (for testing purposes)
 def mock_decode_access_token(token: str):
-    return {"id_artizan": 1}  # Mocked decoded token payload
+    return {"id_artizan": 6}  # Mocked decoded token payload
 
 @pytest.fixture
 def client():
@@ -23,7 +23,7 @@ def client():
 def test_edit_artisan_profile(client):
     # Mock the necessary functions
     with patch("app.routers.artisan.decode_access_token", side_effect=mock_decode_access_token):
-        with patch("app.routers.artisan.get_profile", side_effect=mock_get_profile):
+        with patch("app.routers.artisan.get_artisan_profile", side_effect=mock_get_profile):
             
             # Define the JSON data for the PATCH request
             response = client.patch(
@@ -34,7 +34,7 @@ def test_edit_artisan_profile(client):
                     "password": "newpassword",  # Password should be a valid string
                     "phone_number": "123456789",  # Phone number as string
                     "localisation": "New Location",  # Localization should be a string
-                    "metier": "New Job",  # Job should be a string
+                    "metier": "1",  # Job should be a string
                     "disponibilite": True,  # Boolean value
                 },
                 headers={"token": "Bearer mocked-jwt-token"}  # Pass mocked token in header
@@ -49,7 +49,7 @@ def test_edit_artisan_profile(client):
 
 def test_update_profile_pic(client):
     with patch("app.routers.artisan.decode_access_token", side_effect=mock_decode_access_token):
-        with patch("app.routers.artisan.get_profile", side_effect=mock_get_profile):
+        with patch("app.routers.artisan.get_artisan_profile", side_effect=mock_get_profile):
             with open("test_image.png", "wb") as f:
                 f.write(b"fake image data")  # Create a dummy image file
             with open("test_image.png", "rb") as f:
@@ -66,7 +66,7 @@ def test_update_profile_pic(client):
 
 def test_get_artisan_specialites(client):
     with patch("app.routers.artisan.decode_access_token", side_effect=mock_decode_access_token):
-        with patch("app.routers.artisan.get_profile", side_effect=mock_get_profile):
+        with patch("app.routers.artisan.get_artisan_profile", side_effect=mock_get_profile):
             # Add data first
             client.patch("/artisan/addSpecialite", json=[1, 2], params={"token": "mocked-jwt-token"})
             # Retrieve specialites
@@ -80,7 +80,7 @@ def test_get_artisan_specialites(client):
 
 def test_remove_specialite(client):
     with patch("app.routers.artisan.decode_access_token", side_effect=mock_decode_access_token):
-        with patch("app.routers.artisan.get_profile", side_effect=mock_get_profile):
+        with patch("app.routers.artisan.get_artisan_profile", side_effect=mock_get_profile):
             # Add a specialite first
             client.patch("/artisan/addSpecialite", json=[1], params={"token": "mocked-jwt-token"})
             # Remove the specialite

@@ -5,7 +5,6 @@ name = "pypi"
 
 [packages]
 fastapi = "*"
-pydantic = "*"
 uvicorn = "*"
 psycopg2-binary = "*"
 sqlalchemy = "*"
@@ -14,6 +13,10 @@ python-multipart = "*"
 pyjwt = "*"
 pytest = "*"
 httpx = "*"
+exceptiongroup = "*"
+bcrypt = "*"
+itsdangerous = "*"
+pydantic = {extras = ["email"], version = "*"}
 
 [dev-packages]
 
