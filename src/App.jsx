@@ -8,6 +8,13 @@ import Generale from './Generale';
 import RqDevis from './RqDevis';
 import RpDevis from './RpDevis';
 import Facture from './Facture';
+import Artisandash from './artisandash';
+import Devis from './Devis';
+import DevisRecus from './DevisRecus';
+import Devisrp from './Devisrp';
+import UserDevis from './UserDevis';
+import UserDevisRecus from './UserDevisRecus';
+import UserDevisrp from './UserDevisrp';
 function App() {
   return (
     <>
@@ -21,6 +28,17 @@ function App() {
         <Route path="/rqdevis" element={<RqDevis />} />
         <Route path="/rpdevis" element={<RpDevis />} />
         <Route path="/facture" element={<Facture />} />
+        <Route path="/artisandash" element={<Artisandash />} />
+        <Route path="/devis" element={<Devis />}>
+          <Route index element={<DevisRecus />} />
+          <Route path="devisrp" element={<Devisrp />} />
+          
+        </Route>
+        <Route path="/userdevis" element={<UserDevis />}>
+          <Route index element={<UserDevisRecus />} />
+          <Route path="devisrp" element={<UserDevisrp />} />
+          
+        </Route>
       </Routes>
     </>
   )
