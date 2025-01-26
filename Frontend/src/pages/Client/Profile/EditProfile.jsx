@@ -4,8 +4,6 @@ import AvatarPlaceholder from '../../../assets/avatar.png';
 import { MdOutlineEdit } from "react-icons/md";
 import { userEditProfile , updateProfilePic} from "../../../api/UserEditProfile"; // Import the userEditProfile function
 import { getTokenFromCookie, getProfileArtisan } from '../../../api/getProfile';
-import BASE_URL from "../../../config/config";
-
 
 const EditProfile = () => {
 

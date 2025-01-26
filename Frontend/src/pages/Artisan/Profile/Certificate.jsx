@@ -1,10 +1,12 @@
 import { LiaUniversitySolid } from "react-icons/lia";
 import { IoIosArrowForward } from "react-icons/io";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { getCertificates, getTokenFromCookie } from "../../../api/getProfile";
 
 function Certificate() {
     // Track expanded state for each card using their indices
     const [expandedCards, setExpandedCards] = useState({});
+    const [certificates, setCertificates] = useState([]);
     
     const Certificates = [
         {
@@ -24,12 +26,45 @@ function Certificate() {
         }
     ];
 
+    const GetCertificates = async () => {
+                          try {
+                            const token = getTokenFromCookie();  // Get the token from cookies
+                            if (token) {
+                              try{
+                              const response = await getCertificates({ 
+                                headers: { 
+                                  authorization: `Bearer ${token}`
+                                } 
+                              });
+                              setCertificates(response);
+                              console.log("Certificates: ",certificates)
+                            
+                              }catch (userLoginError) {
+                                // If user login fails, try artisan login
+                                
+                              }
+                              
+            
+                            } else {
+                              console.error("No token found");  // Log error if no token is found
+                            }
+                          } catch (error) {
+                            console.error("Error fetching certificates:", error);  // Handle the error (e.g., show a notification)
+                            throw error;  // You can further handle the error as needed
+                          }
+                        };
+                      
+                        
+                        useEffect(() => {
+                            GetCertificates();  // Call the function when the component mounts
+                        }, []); 
+
     return (
         <div 
             style={{ backgroundColor: 'rgba(249, 249, 249, 1)' }}
             className='bg-slate-300 gap-10 h-full flex-1 mt-0 p-6 flex flex-row flex-wrap'
         >
-            {Certificates.map((certificate, index) => (
+            {certificates.map((certificate, index) => (
                 <a 
                     href="#" 
                     key={index}
@@ -38,13 +73,13 @@ function Certificate() {
                 >
                     <img 
                         className='w-full h-[200px] object-cover rounded-xl pb-5' 
-                        src={certificate.CImage} 
-                        alt={certificate.CName} 
+                        src={certificate.image_file} 
+                        alt={certificate.title} 
                     />
                     <div className='bg-lightGreen felx flex-col flex-wrap p-6 rounded-xl shadow-lg shadow-slate-500'>
                         <div className="flex felx-row">
                             <LiaUniversitySolid className="text-iconSize"/>
-                            <h2 className="font-semibold text-xl">{certificate.CName}</h2>
+                            <h2 className="font-semibold text-xl">{certificate.title}</h2>
                         </div>
                         <div className={`flex flex-row ${!expandedCards[index] ? 'overflow-hidden h-10' : 'mb-5'}`}>
                             <button 
@@ -63,7 +98,7 @@ function Certificate() {
                                     }`} 
                                 />
                             </button>
-                            <p>{certificate.CDescription}</p>
+                            <p>{certificate.description}</p>
                         </div>
                     </div>
                 </a>

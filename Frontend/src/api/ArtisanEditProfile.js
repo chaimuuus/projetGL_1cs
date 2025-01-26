@@ -30,4 +30,29 @@ export const updateProfilePic = async (data, credentials) => {
       throw error;  
     }
   };
+
+  export const editPortfolio = async (data, credentials) => {
+    try {
+      const response = await axios.post(`${BASE_URL}/artisan/addProject`, data, {
+    headers: credentials,  // Send the credentials (headers) in the config
+  });
+  
+  return response.data;  
+  } catch (error) {
+  console.error("Error adding project :", error);
+  throw error;  
+  }
+  };
+  export const editCertificate = async (data, credentials) => {
+    try {
+      const response = await axios.post(`${BASE_URL}/artisan/addCertificat`, data, {
+    headers: credentials,  // Send the credentials (headers) in the config
+  });
+  
+  return response.data;  
+  } catch (error) {
+  console.error("Error adding project :", error);
+  throw error;  
+  }
+  };
   

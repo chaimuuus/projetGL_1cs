@@ -2,28 +2,135 @@ import React, { useRef, useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import Header from '../../components/Header';
 import Sidebar from '../../components/Sidebar';
-import { FaCirclePlus } from "react-icons/fa6";
 import { BsFillSendFill } from "react-icons/bs";
-import { IoImageOutline } from "react-icons/io5";
-import { CiVideoOn, CiFileOn } from "react-icons/ci";
-import avatar from "../../assets/avatar3.png"
+import avatar from "../../assets/avatar3.png";
+import axios from 'axios';
+import useWebSocket from 'react-use-websocket';
+import { getTokenFromCookie, getProfileArtisan } from '../../api/getProfile';
 
 const Messagerie = () => {
-    const [showIcons, setShowIcons] = useState(false);
     const location = useLocation();
     const messagesContainerRef = useRef(null);
-    const imageInputRef = useRef(null);
-    const videoInputRef = useRef(null);
-    const fileInputRef = useRef(null);
-    const [messages, setMessages] = useState([
-        { id: 1, sender: 'user1', text: 'Oui, je comprends. Est-ce que vous pourriez m’envoyer une photo de la fuite pour que je voie la situation ?' },
-        { id: 2, sender: 'user2', text: 'Bien sûr, voici une photo' },
-        { id: 2, sender: 'user2', image: 'https://via.placeholder.com/150' },
-        { id: 3, sender: 'user1', text: 'Merci ! Cela ressemble à un problème avec le joint ou le siphon. Vous savez si la fuite s’est aggravée récemment ?' },
-        { id: 4, sender: 'user2', text: 'Oui, c’était juste quelques gouttes hier, mais maintenant, l’eau coule en continu.' },
-        { id: 5, sender: 'user1', text: 'D’accord. Je peux venir aujourd’hui pour réparer ça. Vous êtes disponible cet après-midi ?' }
-    ]);
+    const [messages, setMessages] = useState([]);
     const [inputText, setInputText] = useState('');
+    const [chatRooms, setChatRooms] = useState([]);
+    const [selectedChatRoomId, setSelectedChatRoomId] = useState(null);
+    const [user, setUser] = useState(null);
+
+    // Fetch user profile
+    const getUserProfile = async () => {
+        try {
+            const token = getTokenFromCookie(); // Get the token from cookies
+            if (token) {
+                const response = await getProfileArtisan({
+                    headers: {
+                        authorization: `Bearer ${token}`,
+                    },
+                });
+                setUser(response.user);
+            } else {
+                console.error("No token found");
+            }
+        } catch (error) {
+            console.error("Error fetching profile:", error);
+            throw error;
+        }
+    };
+
+    useEffect(() => {
+        getUserProfile(); // Fetch user profile on component mount
+    }, []);
+
+    // Fetch chat rooms based on user role
+    useEffect(() => {
+        const fetchChatRooms = async () => {
+            if (!user) return; // Wait until user data is available
+
+            try {
+                let endpoint;
+                if (user.role === 'artisan') {
+                    endpoint = `https://dzartisan-api.onrender.com/artisans/${user.id}/chat-rooms`;
+                } else {
+                    endpoint = `https://dzartisan-api.onrender.com/users/${user.id}/chat-rooms`;
+                }
+
+                const response = await axios.get(endpoint);
+                const chatRooms = response.data;
+
+                // Fetch user/artisan details for each chat room
+                const chatRoomsWithDetails = await Promise.all(
+                    chatRooms.map(async (chatRoom) => {
+                        let userOrArtisan;
+                        if (user.role === 'artisan') {
+                            // Fetch user details
+                            const userResponse = await axios.get(
+                                `https://dzartisan-api.onrender.com/users/${chatRoom.user_id}`
+                            );
+                            userOrArtisan = userResponse.data;
+                        } else {
+                            // Fetch artisan details
+                            const artisanResponse = await axios.get(
+                                `https://dzartisan-api.onrender.com/artisans/${chatRoom.artisan_id}`
+                            );
+                            userOrArtisan = artisanResponse.data;
+                        }
+
+                        return {
+                            ...chatRoom,
+                            userOrArtisan, // Add user/artisan details to the chat room
+                        };
+                    })
+                );
+
+                setChatRooms(chatRoomsWithDetails);
+            } catch (error) {
+                console.error("Error fetching chat rooms:", error);
+            }
+        };
+
+        fetchChatRooms();
+    }, [user]); // Re-run when user data changes
+
+    // Fetch messages when a chat room is selected
+    useEffect(() => {
+        if (selectedChatRoomId) {
+            const fetchMessages = async () => {
+                try {
+                    const response = await axios.get(
+                        `https://dzartisan-api.onrender.com/chat/messages/${selectedChatRoomId}`
+                    );
+                    // Sort messages in ascending order by sent_at
+                    const sortedMessages = response.data.sort((a, b) => 
+                        new Date(a.sent_at) - new Date(b.sent_at)
+                    );
+                    setMessages(sortedMessages);
+                } catch (error) {
+                    console.error("Error fetching messages:", error);
+                }
+            };
+
+            fetchMessages();
+        }
+    }, [selectedChatRoomId]);
+
+    // WebSocket for real-time messaging
+    const { sendMessage, lastMessage } = useWebSocket(
+        selectedChatRoomId ? `wss://dzartisan-api.onrender.com/chat/ws/${selectedChatRoomId}` : null,
+        {
+            onOpen: () => console.log("WebSocket connection established."),
+            onClose: () => console.log("WebSocket connection closed."),
+            shouldReconnect: () => true,
+        }
+    );
+
+    // Handle incoming WebSocket messages
+    useEffect(() => {
+        if (lastMessage) {
+            const message = JSON.parse(lastMessage.data);
+            // Add the new message to the end of the array
+            setMessages((prevMessages) => [...prevMessages, message]);
+        }
+    }, [lastMessage]);
 
     // Scroll to the bottom when messages update
     useEffect(() => {
@@ -34,62 +141,31 @@ const Messagerie = () => {
 
     // Handle sending text messages
     const handleSendMessage = () => {
-        if (inputText.trim()) {
-            const newMessage = {
-                id: messages.length + 1,
-                sender: 'user1', // Replace with dynamic sender if needed
-                text: inputText
+        if (inputText.trim() && selectedChatRoomId) {
+            const messageData = {
+                sender_id: user.id,
+                message: inputText,
+                is_artisan: user.role === 'artisan',
             };
-            setMessages([...messages, newMessage]);
+
+            // Send the message over WebSocket
+            sendMessage(JSON.stringify(messageData));
+
+            // Optimistically update the UI (add to the end of the array)
+            setMessages((prevMessages) => [
+                ...prevMessages,
+                {
+                    id: Date.now(), // Temporary ID (replace with server-generated ID)
+                    sender_id: user.id,
+                    message: inputText,
+                    is_artisan: user.role === 'artisan',
+                    sent_at: new Date().toISOString(),
+                },
+            ]);
+
+            // Clear the input field
             setInputText('');
         }
-    };
-
-    // Handle media/file upload
-    const handleFileUpload = (e, type) => {
-        const file = e.target.files[0];
-        if (file) {
-            const fileUrl = URL.createObjectURL(file);
-            let newMessage;
-
-            // Handle specific file types
-            if (type === 'image') {
-                newMessage = {
-                    id: messages.length + 1,
-                    sender: 'user1',
-                    image: fileUrl,
-                    fileName: file.name
-                };
-            } else if (type === 'video') {
-                newMessage = {
-                    id: messages.length + 1,
-                    sender: 'user1',
-                    video: fileUrl,
-                    fileName: file.name
-                };
-            } else if (type === 'file') {
-                newMessage = {
-                    id: messages.length + 1,
-                    sender: 'user1',
-                    file: fileUrl,
-                    fileName: file.name
-                };
-            }
-
-            setMessages([...messages, newMessage]);
-        }
-    };
-
-    // Trigger specific file input
-    const handleAddMedia = (type) => {
-        if (type === 'image') {
-            imageInputRef.current.click();
-        } else if (type === 'video') {
-            videoInputRef.current.click();
-        } else if (type === 'file') {
-            fileInputRef.current.click();
-        }
-        setShowIcons(false); // Hide icons after adding media
     };
 
     return (
@@ -110,15 +186,26 @@ const Messagerie = () => {
                     {/* Contacts */}
                     <div className="w-1 max-h-screen"></div>
                     <div className="ml-20 left-2 fixed top-16 h-full w-52 bg-lightYellow flex flex-col gap-2 py-6">
-                        <div className='flex gap-1 hover:bg-[rgba(217,217,217,0.16)] px-5 py-2 items-center'>
-                            <img
-                                src={avatar}
-                                alt="User"
-                                className="rounded-full "
-                            />
-                            <p className='font-bold text-xs text-[rgba(0,0,0,0.56)] cursor-pointer'>Rachid Boukhalfa</p>
-                        </div>
-                       
+                        {chatRooms.map((chatRoom) => (
+                            <div
+                                key={chatRoom.id}
+                                className="flex gap-1 hover:bg-[rgba(217,217,217,0.16)] px-5 py-2 items-center cursor-pointer"
+                                onClick={() => {
+                                    console.log("Selected Chat Room ID:", chatRoom); // Debugging
+                                    setSelectedChatRoomId(chatRoom.id);
+                                }}
+                            >
+                                {/* Display profile image */}
+                                <img
+                                    src={chatRoom.userOrArtisan?.image_file || avatar} // Use avatar as fallback
+                                    alt="Profile"
+                                    className="rounded-full w-8 h-8 object-cover"
+                                />
+                                <p className="font-bold text-xs text-[rgba(0,0,0,0.56)]">
+                                    {chatRoom.userOrArtisan?.user_name || chatRoom.userOrArtisan?.full_name}
+                                </p>
+                            </div>
+                        ))}
                     </div>
                     {/* Chat Component */}
                     <div className="flex-1 pl-1 ml-72 rounded-lg">
@@ -131,37 +218,18 @@ const Messagerie = () => {
                                 {messages.map((message) => (
                                     <div
                                         key={message.id}
-                                        className={`flex justify-${message.sender === 'user1' ? 'start' : 'end'}`}
+                                        className={`flex justify-${
+                                            message.sender_id === user.id ? 'end' : 'start'
+                                        }`}
                                     >
                                         <div
                                             className={`p-3 rounded-3xl rounded-tl-none max-w-xs ${
-                                                message.sender === 'user1' ? 'bg-yellow-200' : 'bg-yellow-100'
+                                                message.sender_id === user.id
+                                                    ? 'bg-yellow-200'
+                                                    : 'bg-yellow-100'
                                             }`}
                                         >
-                                            {message.text && <p>{message.text}</p>}
-                                            {message.image && (
-                                                <img
-                                                    src={message.image}
-                                                    alt="Uploaded"
-                                                    className="mt-2 rounded shadow"
-                                                />
-                                            )}
-                                            {message.video && (
-                                                <video controls className="mt-2 rounded shadow">
-                                                    <source src={message.video} type="video/mp4" />
-                                                    Your browser does not support the video tag.
-                                                </video>
-                                            )}
-                                            {message.file && (
-                                                <a
-                                                    href={message.file}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="mt-2 text-blue-500 hover:underline"
-                                                >
-                                                    {message.fileName || 'Download File'}
-                                                </a>
-                                            )}
+                                            <p>{message.message}</p>
                                         </div>
                                     </div>
                                 ))}
@@ -169,36 +237,6 @@ const Messagerie = () => {
 
                             {/* Input Area */}
                             <div className="flex p-4 bg-lightYellow opacity-85 pr-8">
-                                <div className="relative">
-                                    <button
-                                        onClick={() => setShowIcons(!showIcons)}
-                                        className="flex items-center justify-center text-custom_green p-2 rounded-full hover:text-green-600 transition-colors duration-200"
-                                    >
-                                        <FaCirclePlus className="h-6 w-6" />
-                                    </button>
-                                    {showIcons && (
-                                        <div className="absolute -translate-x-full left-12 bottom-10 flex flex-col gap-5 p-2 rounded-lg">
-                                            <button
-                                                onClick={() => handleAddMedia('image')}
-                                                className="text-custom_green p-2 bg-white rounded-full hover:text-green-600 transition-colors duration-200"
-                                            >
-                                                <IoImageOutline className="h-6 w-6" />
-                                            </button>
-                                            <button
-                                                onClick={() => handleAddMedia('video')}
-                                                className="text-custom_green p-2 bg-white rounded-full hover:text-green-600 transition-colors duration-200"
-                                            >
-                                                <CiVideoOn className="h-6 w-6" />
-                                            </button>
-                                            <button
-                                                onClick={() => handleAddMedia('file')}
-                                                className="text-custom_green p-2 bg-white rounded-full hover:text-green-600 transition-colors duration-200"
-                                            >
-                                                <CiFileOn className="h-6 w-6" />
-                                            </button>
-                                        </div>
-                                    )}
-                                </div>
                                 <input
                                     type="text"
                                     placeholder="Commencer à écrire..."
@@ -218,28 +256,6 @@ const Messagerie = () => {
                     </div>
                 </div>
             </div>
-
-            {/* Hidden File Inputs */}
-            <input
-                type="file"
-                ref={imageInputRef}
-                style={{ display: 'none' }}
-                accept="image/*"
-                onChange={(e) => handleFileUpload(e, 'image')}
-            />
-            <input
-                type="file"
-                ref={videoInputRef}
-                style={{ display: 'none' }}
-                accept="video/*"
-                onChange={(e) => handleFileUpload(e, 'video')}
-            />
-            <input
-                type="file"
-                ref={fileInputRef}
-                style={{ display: 'none' }}
-                onChange={(e) => handleFileUpload(e, 'file')}
-            />
         </div>
     );
 };

@@ -6,6 +6,8 @@ import Footer from "../components/Footer"
 import { login, loginArtisan } from "../api/auth";
 import { useNavigate } from 'react-router-dom';
 import { useState } from "react";
+import { Link } from "react-router-dom";
+
 
 import Cookies from 'js-cookie';
 
@@ -141,9 +143,11 @@ const Login = () => {
                   {/* Footer */}
                   <p className="text-sm text-center text-gray-600 mt-3">
                   Vous n’avez encore un compte?{" "}
+                      <Link to="/welcome">
                       <a href="#" className="text-custom_green font-semibold">
                         Inscrivez-vous ici
                       </a>
+                      </Link>
                   </p>
                   </div>
               </div>

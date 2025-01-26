@@ -4,17 +4,33 @@ import AvatarPlaceholder from "../../../assets/avatar2.png";
 import { MdOutlineEdit } from "react-icons/md";
 import { getProfileArtisan, getTokenFromCookie } from "../../../api/getProfile";
 import { updateProfilePic, artisanEditProfile } from "../../../api/ArtisanEditProfile";
-import { getMetiers } from "../../../api/Metier";
+import { getMetiers, getMetierSpecialites } from "../../../api/Metier";
+import {addSpecialite} from "../../../api/Specialite"
 
 const EditProfile = () => {
   const [avatar, setAvatar] = useState(AvatarPlaceholder);
   const [specialites, setSpecialites] = useState([]);
   const [artisan, setArtisan] = useState(null);
   const { register, handleSubmit, resetField, watch, setValue } = useForm();
-
-  const predefinedSpecialites = ["Plomberie", "Électricité", "Chauffage", "Climatisation"];
+  const [predefinedSpecialites, setPredefinedSpecialites] = useState([
+    {
+      name: "Pipe Installation",
+      specialite_id: 9,
+    },
+    {
+      name: "Drain Cleaning",
+      specialite_id: 10,
+    },
+    {
+      name: "Leak Repair",
+      specialite_id: 11,
+    },
+  ])
+  
   const specialiteInput = watch("specialiteInput", "");
   const [metiers, setMetiers] = useState([]);
+
+ 
 
   // Handle avatar upload
   const handleImageUpload = async (e) => {
@@ -52,7 +68,6 @@ const EditProfile = () => {
           },
         });
         setArtisan(response.user);
-        setSpecialites(response.user.specialites || []); // Assuming specialites are part of the response
       } else {
         console.error("No token found");
       }
@@ -70,6 +85,35 @@ const EditProfile = () => {
       console.error("Error fetching metiers:", error);
     }
   };
+ 
+
+
+
+   // Fetch specialities for a specific metier
+   const fetchMetierSpecialites = async (metierId) => {
+    try {
+      const token = getTokenFromCookie();
+      if (!token) throw new Error("No token found");
+      
+      const credentials = {
+        headers: { Authorization: `Bearer ${token}` },
+      };
+
+      const specialities = await getMetierSpecialites(metierId, credentials);
+      setPredefinedSpecialites(specialities);
+    } catch (error) {
+      console.error("Error fetching specialities:", error);
+    }
+  };
+
+  // Watch for changes in the metier selection
+  useEffect(() => {
+    if (artisan?.metier) {
+      fetchMetierSpecialites(artisan.metier); // Fetch specialities for the selected metier
+    }
+  }, [artisan?.metier]);
+
+  
 
   useEffect(() => {
     getArtisanProfile();
@@ -94,30 +138,63 @@ const EditProfile = () => {
         const credentials = {
           authorization: `Bearer ${token}`,
         };
-        const profileData = { ...data, specialites };
+        const profileData = { ...data,  metier: String(data.metier) };
         const response = await artisanEditProfile(profileData, credentials);
         console.log("Profile updated successfully:", response);
       }
+    // If form submission is successful, submit specialites separately
+      if (specialites.length > 0) {
+        const token = getTokenFromCookie(); // Get the token from the cookie
+        
+        if (token) {
+          // Prepare credentials with authorization token
+          const credentials = {
+            authorization: `Bearer ${token}`,
+          };
+          
+          // Create an array of specialite ids
+          const specialityIds = specialites.map(specialite => specialite.specialite_id);
+          console.log("Speciality IDs to be added:", credentials);
+          
+          // Call addSpecialite function to add the specialities
+          const specialiteResponse = await addSpecialite(specialityIds, credentials);
+          console.log("Specialites added successfully:", specialiteResponse);
+        } else {
+          console.error("No token found in cookies.");
+        }
+      } else {
+        console.error("No specialities selected.");
+      }
     } catch (error) {
-      console.error("Error updating profile:", error);
+      console.error("Error during profile update or adding specialities:", error);
     }
+    
   };
+
+ 
+  
+  
 
   // Handle adding specialities
   const handleAddSpecialite = () => {
-    if (specialiteInput && !specialites.includes(specialiteInput)) {
-      setSpecialites((prev) => [...prev, specialiteInput]);
+    const selectedSpecialite = predefinedSpecialites.find(
+      (specialite) => specialite.specialite_id === parseInt(specialiteInput)
+    );
+  
+    if (selectedSpecialite && !specialites.some((s) => s.specialite_id === selectedSpecialite.specialite_id)) {
+      setSpecialites((prev) => [...prev, selectedSpecialite]);
       resetField("specialiteInput");
     }
   };
+  
 
   // Handle removing specialities
-  const handleRemoveSpecialite = (specialite) => {
-    setSpecialites((prev) => prev.filter((item) => item !== specialite));
+  const handleRemoveSpecialite = (specialiteId) => {
+    setSpecialites((prev) => prev.filter((specialite) => specialite.specialite_id !== specialiteId));
   };
 
   const selectedMetier = metiers.find((metier) => metier.id === artisan?.metier);
-
+  
   return (
     <div>
       {/* Avatar Section */}
@@ -225,11 +302,12 @@ const EditProfile = () => {
                 className="mt-1 block w-full px-4 py-2 bg-transparent border border-gray-300 rounded-md shadow-sm focus:outline-green-300"
               >
                 <option value="">Sélectionnez un domaine...</option>
-                {predefinedSpecialites.map((specialite, index) => (
-                  <option key={index} value={specialite}>
-                    {specialite}
+                {predefinedSpecialites.map((specialite) => (
+                  <option key={specialite.specialite_id} value={specialite.specialite_id}>
+                    {specialite.name}
                   </option>
                 ))}
+
               </select>
               <button
                 type="button"
@@ -240,21 +318,22 @@ const EditProfile = () => {
               </button>
             </div>
             <div className="mt-4 flex flex-wrap gap-4">
-              {specialites.map((specialite, index) => (
-                <div
-                  key={index}
-                  className="flex items-center bg-slate-300 px-3 py-1 rounded-md"
+            {specialites.map((specialite, index) => (
+              <div
+                key={index}
+                className="flex items-center bg-slate-300 px-3 py-1 rounded-md"
+              >
+                <span>{specialite.name}</span> {/* Render the name property */}
+                <button
+                  type="button"
+                  onClick={() => handleRemoveSpecialite(specialite.specialite_id)} 
+                  className="ml-2 text-red-500 w-5 h-5 flex items-center justify-center rounded-full"
                 >
-                  <span>{specialite}</span>
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveSpecialite(specialite)}
-                    className="ml-2 text-red-500 w-5 h-5 flex items-center justify-center rounded-full"
-                  >
-                    ×
-                  </button>
-                </div>
-              ))}
+                  ×
+                </button>
+              </div>
+            ))}
+
             </div>
           </div>
         </div>

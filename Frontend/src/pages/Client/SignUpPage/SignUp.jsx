@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import React from "react";
 import { useForm } from "react-hook-form";
 import logo from "../../../assets/Logo.png";
@@ -182,9 +183,11 @@ const SignUp = () => {
                   {/* Footer */}
                   <p className="text-sm text-center text-gray-600 mt-3">
                       Vous avez déjà un compte?{" "}
+                      <Link to = "/login">
                       <a href="#" className="text-custom_green font-semibold">
                       Connectez-vous ici
                       </a>
+                      </Link>
                   </p>
                   </div>
               </div>
