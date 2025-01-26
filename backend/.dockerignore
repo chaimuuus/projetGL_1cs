@@ -1,0 +1,50 @@
+# Ignore Python cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.py~
+
+# Ignore Pipenv virtual environments (if used locally)
+.env
+.venv/
+
+# Ignore local environment variable files
+.env.local
+.env.development
+.env.production
+.env.test
+
+# Ignore log files
+*.log
+logs/
+
+# Ignore Docker-related files that shouldn't be copied
+Dockerfile
+docker-compose.yml
+
+# Ignore version control files
+.git/
+.gitignore
+*.swp
+*.swo
+
+# Ignore system files
+.DS_Store
+Thumbs.db
+
+# Ignore node modules (if full-stack project)
+node_modules/
+
+# Ignore build output (React, etc.)
+build/
+dist/
+
+# Ignore editor/project-specific files
+.vscode/
+.idea/
+*.iml
+
+# Ignore large media or cache directories if present
+media/
+staticfiles/

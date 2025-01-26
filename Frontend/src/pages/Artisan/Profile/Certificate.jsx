@@ -1,84 +1,75 @@
-import { useForm } from "react-hook-form";
+import { LiaUniversitySolid } from "react-icons/lia";
+import { IoIosArrowForward } from "react-icons/io";
+import { useState } from 'react';
 
-const Certificats = () =>{
-
-    const { register, handleSubmit, formState: { errors } } = useForm();
+function Certificate() {
+    // Track expanded state for each card using their indices
+    const [expandedCards, setExpandedCards] = useState({});
     
-    const onSubmit = (data) => {
-        console.log(data); 
-    };
-        
+    const Certificates = [
+        {
+            CName: 'Installation',
+            CDescription: 'Installation salle de bain complète Installation salle de bain complèteInstallation salle de bain complèteInstallation salle de bain complèteInstallation salle de bain complète',
+            CImage: '/jardinier.png',
+        },
+        {
+            CName: 'Installation',
+            CDescription: 'Installation salle de bain complète',
+            CImage: '/jardinier.png',
+        },
+        {
+            CName: 'Installation',
+            CDescription: 'Installation salle de bain complète',
+            CImage: '/jardinier.png',
+        }
+    ];
+
     return (
-        <div>
-            <h1 className="mx-16 text-2xl my-4 text-custom_green">
-                Ajoutez vos certificats pour prouver votre expertise et vos qualifications professionnelles. <br />Ces éléments renforcent votre crédibilité.
-            </h1>
-            <form
-                onSubmit={handleSubmit(onSubmit)}
-                className="max-w-2xl my-10 mx-auto p-6 bg-custom_grey bg-opacity-50 rounded-lg shadow-md"
-            >
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Institution */}
-                    <div className="md:col-span-2">
-                        <label className="block text-sm font-semibold text-custom_blue">Institution</label>
-                        <input
-                            type="text"
-                            {...register("institution", { required: "Institution is required" })}
-                            placeholder="Exemple : estin"
-                            className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-green-300 bg-transparent"
-                        />
-                        {errors.institution && <p className="text-red-500 text-sm mt-1">{errors.institution.message}</p>}
-                    </div>
-
-                    {/* Titre du certificat */}
-                    <div className="md:col-span-2">
-                        <label className="block text-sm font-semibold text-custom_blue">Titre du certificat</label>
-                        <input
-                            type="text"
-                            {...register("certificateTitle", { required: "Titre du certificat is required" })}
-                            placeholder="Saisissez le titre de votre certificat"
-                            className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-green-300 bg-transparent"
-                        />
-                        {errors.certificateTitle && <p className="text-red-500 text-sm mt-1">{errors.certificateTitle.message}</p>}
-                    </div>
-
-                    {/* Description */}
-                    <div className="md:col-span-2">
-                        <label className="block text-sm font-semibold text-custom_blue">Description</label>
-                        <textarea
-                            {...register("description", { required: "Description is required" })}
-                            placeholder="Décrivez ce que ce certificat prouve ou autorise, par exemple les compétences validées ou les travaux possibles"
-                            className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-green-300 bg-transparent"
-                            rows="4"
-                        />
-                        {errors.description && <p className="text-red-500 text-sm mt-1">{errors.description.message}</p>}
-                    </div>
-
-                    {/* Certificat */}
-                    <div className="md:col-span-2">
-                        <label className="block text-sm font-semibold text-custom_blue">Certificat</label>
-                        <div className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-green-300 bg-transparent">
-                            <input
-                                type="file"
-                                {...register("certificateFile", { required: "Certificat is required" })}
-                                accept=".jpg,.png,.pdf"
-                                className="w-full"
-                                multiple 
-                            />
-                        </div>
-                        <p className="text-sm text-gray-500 mt-2">Veuillez insérer un fichier au format JPG, PNG ou PDF, avec une taille maximale de 5 Mo.</p>
-                        {errors.certificateFile && <p className="text-red-500 text-sm mt-1">{errors.certificateFile.message}</p>}
-                    </div>
-                </div>
-
-                <button
-                    type="submit"
-                    className="mt-6 w-28 py-2 px-4 bg-custom_green text-white font-semibold rounded-md hover:bg-green-700"
+        <div 
+            style={{ backgroundColor: 'rgba(249, 249, 249, 1)' }}
+            className='bg-slate-300 gap-10 h-full flex-1 mt-0 p-6 flex flex-row flex-wrap'
+        >
+            {Certificates.map((certificate, index) => (
+                <a 
+                    href="#" 
+                    key={index}
+                    style={{backgroundColor:'rgba(220, 226, 206, 1)'}}
+                    className='flex flex-col p-6 gap-y-4 text-white rounded-3xl shadow-slate-500 shadow-2xl w-[380px]'
                 >
-                    Enregistrer
-                </button>
-            </form>
+                    <img 
+                        className='w-full h-[200px] object-cover rounded-xl pb-5' 
+                        src={certificate.CImage} 
+                        alt={certificate.CName} 
+                    />
+                    <div className='bg-lightGreen felx flex-col flex-wrap p-6 rounded-xl shadow-lg shadow-slate-500'>
+                        <div className="flex felx-row">
+                            <LiaUniversitySolid className="text-iconSize"/>
+                            <h2 className="font-semibold text-xl">{certificate.CName}</h2>
+                        </div>
+                        <div className={`flex flex-row ${!expandedCards[index] ? 'overflow-hidden h-10' : 'mb-5'}`}>
+                            <button 
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    setExpandedCards(prev => ({
+                                        ...prev,
+                                        [index]: !prev[index]
+                                    }));
+                                }}
+                                className='bg-none'
+                            >
+                                <IoIosArrowForward 
+                                    className={`text-white text-iconSize mr-2 transition-transform duration-300 rounded-full ${
+                                        expandedCards[index] ? 'rotate-90' : ''
+                                    }`} 
+                                />
+                            </button>
+                            <p>{certificate.CDescription}</p>
+                        </div>
+                    </div>
+                </a>
+            ))}
         </div>
     );
 }
-export default Certificats;
+
+export default Certificate;

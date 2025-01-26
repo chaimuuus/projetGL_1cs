@@ -22,7 +22,7 @@ const Welcome = () =>{
                         <h1 className="text-xl mt-5 text-center font-bold">Je veux développer <br /> mon entreprise</h1>
                         <p className="text-center text-sm">Répondre à des demandes, obtenir du <br /> travail et gérer mes projets.</p>
                         <div className="bg-custom_green p-2 rounded-md mb-4 w-36">
-                        <Link to="/artisan/sign-up" className="block">
+                        <Link to="/artisan/signup" className="block">
                                 <h1 className="text-md text-white">Je suis un artisan</h1>
                         </Link>
                         </div>
@@ -32,7 +32,7 @@ const Welcome = () =>{
                         <h1 className="text-xl text-center font-bold">Je veux engager des <br /> professionnels</h1>
                         <p className="text-center text-sm mb-3">Demander des services, comparer <br /> des devis et planifier mes travaux.</p>
                         <div className="bg-custom_green p-2 rounded-md w-44">
-                        <Link to="/client/sign-up" className="block">
+                        <Link to="/user/signup" className="block">
                                 <h1 className="text-md text-white">Je cherche un artisan</h1>
                         </Link>
                         </div>

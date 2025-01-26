@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import logo from "../../../assets/Logo.png";
 import RightSection from "../../../components/SignUp/RightSection"
 import Footer from "../../../components/Footer"
+import { signup } from "../../../api/auth";
 
 
 const SignUp = () => {
@@ -12,8 +13,29 @@ const SignUp = () => {
     formState: { errors },
   } = useForm();
 
-  const onSubmit = (data) => {
-    console.log(data);
+
+  
+
+  const onSubmit = async (data) => {
+
+    const payload = {
+        user_name: data.username,
+        email: data.email,
+        password: data.password,
+        phone_number: data.phone_number,
+        address: "None", // Default address
+      };
+
+
+
+    try {
+      const response = await signup(payload); // API call
+      console.log("Signup successful:", response);
+      alert("Compte créé avec succès !");
+    } catch (error) {
+      console.error("Error during signup:", error);
+      alert("Une erreur s'est produite. Veuillez réessayer.");
+    }
   };
 
   return (
@@ -36,49 +58,54 @@ const SignUp = () => {
                   {/* Form */}
                   <div className="max-w-md w-full text-sm">
                   <form onSubmit={handleSubmit(onSubmit)}>
-                      {/* Nom */}
-                      <div className="mb-2">
-                      <label htmlFor="nom" className="block text-sm font-medium mb-1">
-                          Nom
+                      {/* Nom d'utilisateur */}
+                        <div className="mb-2">
+                        <label htmlFor="username" className="block text-sm font-medium mb-1">
+                            Nom d'utilisateur
+                        </label>
+                        <input
+                            id="username"
+                            type="text"
+                            placeholder="Nom d'utilisateur"
+                            {...register("username", { required: "Le champ Nom d'utilisateur est requis" })}
+                            className={`w-full border bg-transparent h-9 ${
+                            errors.username ? "border-red-500" : "border-gray-300"
+                            } p-2 rounded`}
+                        />
+                        {errors.username && (
+                            <p className="text-red-500 text-xs mt-1">
+                            {errors.username.message}
+                            </p>
+                        )}
+                        </div>
+
+                      {/* Numéro de téléphone */}
+                      <div className="mb-1">
+                      <label htmlFor="phone_number" className="block text-sm font-medium mb-1">
+                          Numéro de téléphone
                       </label>
                       <input
-                          id="nom"
+                          id="phone_number"
                           type="text"
-                          placeholder="Nom"
-                          {...register("nom", { required: "Le champ Nom est requis" })}
-                          className={`w-full border bg-transparent h-9 ${
-                          errors.nom ? "border-red-500" : "border-gray-300"
+                          placeholder="0666666666"
+                          {...register("phone_number", {
+                          required: "Le champ Numéro de téléphone est requis",
+                          pattern: {
+                              value: /^(05|06|07)[0-9]{8}$/,
+                              message: "Veuillez entrer un numéro de téléphone valide (10 chiffres)",
+                          },
+                          })}
+                          className={`w-full bg-transparent h-9 border ${
+                          errors.phone_number ? "border-red-500" : "border-gray-300"
                           } p-2 rounded`}
                       />
-                      {errors.nom && (
+                      {errors.phone_number && (
                           <p className="text-red-500 text-xs mt-1">
-                          {errors.nom.message}
+                          {errors.phone_number.message}
                           </p>
                       )}
                       </div>
 
-                      {/* Prénom */}
-                      <div className="mb-2">
-                      <label htmlFor="prenom" className="block text-sm font-medium mb-1">
-                          Prénom
-                      </label>
-                      <input
-                          id="prenom"
-                          type="text"
-                          placeholder="Prénom"
-                          {...register("prenom", {
-                          required: "Le champ Prénom est requis",
-                          })}
-                          className={`w-full bg-transparent h-9 border ${
-                          errors.prenom ? "border-red-500" : "border-gray-300"
-                          } p-2 rounded`}
-                      />
-                      {errors.prenom && (
-                          <p className="text-red-500 text-xs mt-1">
-                          {errors.prenom.message}
-                          </p>
-                      )}
-                      </div>
 
                       {/* Adresse Email */}
                       <div className="mb-2">

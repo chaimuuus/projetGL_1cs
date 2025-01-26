@@ -1,85 +1,70 @@
-import { useForm } from "react-hook-form";
+import { MdEmail } from "react-icons/md";
+import { FaMoneyCheckDollar } from "react-icons/fa6";
+import { TbClockHour10Filled } from "react-icons/tb";
+import Rating from'./rating'
 
-const Portfolio = () =>{
+function Portfolio() {
 
-    const { register, handleSubmit, formState: { errors } } = useForm();
+    const projects = [
+        {
+            pName: 'Installation',
+            pDescription: 'Installation salle de bain complète',
+            pDuree: '7 jours',
+            pImage: '/jardinier.png',
+            pRate: '3',
+            pPrice: '5000000.00 DA'
+        },
+        {
+            pName: 'Réparation',
+            pDescription: 'Réparation d’une fuite sous évier',
+            pDuree: '7 jours',
+            pImage: '/jardinier.png',
+            pRate: '4',
+            pPrice: '7000000.00 DA'
+        },
+        {
+            pName: 'Service Spe',
+            pDescription: 'Réseau d’évacuation conforme.',
+            pDuree: '7 jours',
+            pImage: '/jardinier.png',
+            pRate: '4',
+            pPrice: '6000000.00 DA'
+        }
+    ];
 
-    const onSubmit = (data) => {
-        console.log(data); 
-    };
-
-
-    return(
-        <div>
-            <h1 className="mx-16 text-2xl my-4 text-custom_green">
-                Mettez en avant vos compétences en ajoutant vos projets et réalisations. <br />Chaque projet renforce la confiance de vos clients potentiels
-            </h1>
-            <form
-            onSubmit={handleSubmit(onSubmit)}
-            className="max-w-2xl my-10 mx-auto p-6 bg-custom_grey bg-opacity-50 rounded-lg shadow-md"
-            >
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Services */}
-                    <div className="md:col-span-2">
-                        <label className="block text-sm font-semibold text-custom_blue">Services</label>
-                        <select
-                            {...register("services", { required: "Services is required" })}
-                            className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-green-300 bg-transparent"
-                        >
-                            <option value="">Sélectionnez un service...</option>
-                            <option value="Installation">Installation</option>
-                            <option value="Maintenance">Maintenance</option>
-                            <option value="Repair">Repair</option>
-                            <option value="Inspection">Inspection</option>
-                        </select>
-                        {errors.services && <p className="text-red-500 text-sm mt-1">{errors.services.message}</p>}
+    return (
+        <div 
+            style={{ backgroundColor: 'rgba(249, 249, 249, 1)' }}
+            className='bg-slate-300 gap-10 h-full flex-1 mt-0 p-6 flex flex-row flex-wrap'
+        >
+            {projects.map((project, index) => (
+                <a 
+                    href="#" 
+                    key={index}
+                    style={{backgroundColor:'rgba(220, 226, 206, 1)'}}
+                    className='flex flex-col p-6 gap-y-4 text-lightGreen rounded-3xl 
+                        shadow-slate-500 shadow-2xl w-[380px]' >
+                    <img 
+                        className='w-full h-[200px] object-cover rounded-xl pb-5' 
+                        src={project.pImage} 
+                        alt={project.pName} 
+                    />
+                    <div className="flex flex-row gap-2 ">
+                        <span className="font-semibold mr-20">{project.pName}</span>
+                        <Rating rating={project.pRate} />
+                        <MdEmail className="text-iconSize" />
                     </div>
-
-                    {/* Titre */}
-                    <div className="md:col-span-2">
-                        <label className="block text-sm font-semibold text-custom_blue">Titre</label>
-                        <input
-                            type="text"
-                            {...register("titre")}
-                            placeholder="Titre"
-                            className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-green-300 bg-transparent"
-                        />
+                    <p >{project.pDescription}</p>
+                    <div className="flex flex-row gap-2 rounded-xl text-white bg-lightGreen p-4">
+                        <FaMoneyCheckDollar className="text-iconSize" />
+                        <span className="mr-6">{project.pPrice}</span>
+                        <TbClockHour10Filled className="text-iconSize" />
+                        <span>{project.pDuree}</span>
                     </div>
-
-                    {/* Prix */}
-                    <div className="md:col-span-2 relative">
-                        <label className="block text-sm font-semibold text-custom_blue">Prix</label>
-                        <input
-                            type="number"
-                            {...register("prix")}
-                            placeholder="500000"
-                            className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-green-300 appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none bg-transparent"
-                        />
-                        <p className="absolute top-8 right-2">DA</p>
-                    </div>
-
-                    {/* Illustration */}
-                    <div className="md:col-span-2">
-                        <label className="block text-sm font-semibold text-custom_blue">Illustration</label>
-                        <input
-                            type="file"
-                            {...register("illustration")}
-                            accept=".jpg,.png,.pdf"
-                            multiple 
-                            className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-green-300"
-                        />
-                        <p className="text-sm text-gray-500 mt-2">Veuillez insérer un fichier au format JPG, PNG ou PDF, avec une taille maximale de 5 Mo.</p>
-                    </div>
-                </div>
-
-                <button
-                    type="submit"
-                    className="mt-6 w-28 py-2 px-4 bg-custom_green text-white font-semibold rounded-md hover:bg-green-700"
-                >
-                    Enregistrer
-                </button>
-            </form>
+                </a>
+            ))}
         </div>
-    )
+    );
 }
+
 export default Portfolio;

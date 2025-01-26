@@ -3,16 +3,46 @@ import { useForm } from "react-hook-form";
 import logo from "../assets/Logo.png";
 import RightSection from "../components/SignUp/RightSection"
 import Footer from "../components/Footer"
+import { login, loginArtisan } from "../api/auth";
+import { useNavigate } from 'react-router-dom';
+import { useState } from "react";
+
+import Cookies from 'js-cookie';
+
 
 const Login = () => {
+  let isArtisan = false;
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm();
-
-  const onSubmit = (data) => {
-    console.log(data);
+  const navigate = useNavigate();
+  const onSubmit = async (data) => {
+    try {
+      let response;
+      try {
+        // First, try user login
+        response = await login(data);
+      
+      } catch (userLoginError) {
+        // If user login fails, try artisan login
+        response = await loginArtisan(data);
+        isArtisan = true
+      }
+  
+      console.log("Login successful:", response);
+      alert("Login avec succès !");
+  
+      const { access_token } = response;
+      Cookies.set('token', `${access_token}`, { expires: 7, secure: true, sameSite: 'Strict' });
+      console.log(isArtisan)
+      navigate(isArtisan ? "/artisan" : "/user");
+  
+    } catch (error) {
+      console.error("Login failed:", error);
+      alert("Email ou mot de passe incorrect.");
+    }
   };
 
   return (

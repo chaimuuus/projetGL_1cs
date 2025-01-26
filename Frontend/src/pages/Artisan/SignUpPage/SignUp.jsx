@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import logo from "../../../assets/Logo.png";
 import RightSection from "../../../components/SignUp/RightSection"
 import Footer from "../../../components/Footer"
+import { signupArtisan } from "../../../api/auth";
 
 const SignUp = () => {
   const {
@@ -11,15 +12,32 @@ const SignUp = () => {
     formState: { errors },
   } = useForm();
 
-  const onSubmit = (data) => {
-    console.log(data);
-  };
+  const onSubmit = async (data) => {
+    const payload = {
+            full_name: data.full_name,
+            phone_number: data.phone_number,    
+            email: data.email,
+            password: data.password,
+            localisation: "None", // Default address
+          };
+    
+    
+    
+        try {
+          const response = await signupArtisan(payload); // API call
+          console.log("Signup successful:", response);
+          alert("Compte créé avec succès !");
+        } catch (error) {
+          console.error("Error during signup:", error);
+          alert("Une erreur s'est produite. Veuillez réessayer.");
+        }
+      };
 
   return (
     <div className="flex flex-col">
       <div className="flex h-screen">
         {/* Left Section */}
-          <div className="w-1/2 p-16 py-2">
+          <div className="w-1/2 p-16 py-10">
               <div className=" bg-custom_yellow bg-opacity-20 flex flex-col p-1 items-center shadow-lg rounded-lg">
                   {/* Logo */}
                   <div className=" mb-1 ml-6 w-34 self-start">
@@ -35,56 +53,37 @@ const SignUp = () => {
                   {/* Form */}
                   <div className="max-w-md w-full text-sm">
                   <form onSubmit={handleSubmit(onSubmit)}>
-                      {/* Nom */}
+                      {/* Full name */}
                       <div className="mb-1">
-                      <label htmlFor="nom" className="block text-sm font-medium mb-1">
-                          Nom
+                      <label htmlFor="full_name" className="block text-sm font-medium mb-1">
+                          Full name
                       </label>
                       <input
-                          id="nom"
+                          id="full_name"
                           type="text"
-                          placeholder="Nom"
-                          {...register("nom", { required: "Le champ Nom est requis" })}
+                          placeholder="full_name"
+                          {...register("full_name", { required: "Le champ full_name est requis" })}
                           className={`w-full border bg-transparent h-9 ${
-                          errors.nom ? "border-red-500" : "border-gray-300"
+                          errors.full_name ? "border-red-500" : "border-gray-300"
                           } p-2 rounded`}
                       />
-                      {errors.nom && (
+                      {errors.full_name && (
                           <p className="text-red-500 text-xs mt-1">
-                          {errors.nom.message}
+                          {errors.full_name.message}
                           </p>
                       )}
                       </div>
-                      <div className="mb-1">
-                      <label htmlFor="prenom" className="block text-sm font-medium mb-1">
-                          Prénom
-                      </label>
-                      <input
-                          id="prenom"
-                          type="text"
-                          placeholder="Prénom"
-                          {...register("prenom", { required: "Le champ Prénom est requis" })}
-                          className={`w-full border bg-transparent h-9 ${
-                          errors.prenom ? "border-red-500" : "border-gray-300"
-                          } p-2 rounded`}
-                      />
-                      {errors.prenom && (
-                          <p className="text-red-500 text-xs mt-1">
-                          {errors.prenom.message}
-                          </p>
-                      )}
-                      </div>
-
+                      
                       {/* Numéro de téléphone */}
                       <div className="mb-1">
-                      <label htmlFor="telephone" className="block text-sm font-medium mb-1">
+                      <label htmlFor="phone_number" className="block text-sm font-medium mb-1">
                           Numéro de téléphone
                       </label>
                       <input
-                          id="telephone"
+                          id="phone_number"
                           type="text"
                           placeholder="0666666666"
-                          {...register("telephone", {
+                          {...register("phone_number", {
                           required: "Le champ Numéro de téléphone est requis",
                           pattern: {
                               value: /^(05|06|07)[0-9]{8}$/,
@@ -92,12 +91,12 @@ const SignUp = () => {
                           },
                           })}
                           className={`w-full bg-transparent h-9 border ${
-                          errors.telephone ? "border-red-500" : "border-gray-300"
+                          errors.phone_number ? "border-red-500" : "border-gray-300"
                           } p-2 rounded`}
                       />
-                      {errors.telephone && (
+                      {errors.phone_number && (
                           <p className="text-red-500 text-xs mt-1">
-                          {errors.telephone.message}
+                          {errors.phone_number.message}
                           </p>
                       )}
                       </div>
