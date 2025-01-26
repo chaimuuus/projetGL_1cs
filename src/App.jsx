@@ -36,7 +36,7 @@ function App() {
         </Route>
         <Route path="/userdevis" element={<UserDevis />}>
           <Route index element={<UserDevisRecus />} />
-          <Route path="devisrp" element={<UserDevisrp />} />
+          <Route path="userdevisrp" element={<UserDevisrp />} />
           
         </Route>
       </Routes>

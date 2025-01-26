@@ -38,7 +38,7 @@ export const Sidebar = ({ isExpanded, setIsExpanded }) => {
           {menuItems.map((item) => (
             <li key={item.id}>
               <a
-                href="#"
+                href="/src/"
                 onClick={() => setActivePage(item.id)}
                 className={`sidebar-nav-link flex items-center transition-all duration-200 
                   ${isExpanded ? 'space-x-2 px-2' : 'justify-center'} 

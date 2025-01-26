@@ -25,13 +25,7 @@ function ImageModal({ imageUrl, onClose }) {
 }
 
 function UserDevisRecus() {
-    const [expandedIndex, setExpandedIndex] = useState(null);
-    const [showLinks, setShowLinks] = useState(null);
-    const [selectedImage, setSelectedImage] = useState(null);
-    const [isHovered, setIsHovered] = useState(null);
-    const [sortDirection, setSortDirection] = useState('asc');
-
-    const quotes = [
+    const initialQuotes = [
         {
             pfp: "jardinier.png",
             fullName: "Alice",
@@ -40,6 +34,15 @@ function UserDevisRecus() {
             desc: "Nous avons besoin d'un devis pour votre jardinage.",
             date: "2022-01-25",
             budjet: "3500 DZD",
+            illustration: "jardinier.png",
+        },{
+            pfp: "jardinier.png",
+            fullName: "Alice",
+            urgency: "Urgent",
+            serviceName: "Installation",
+            desc: "Nous avons besoin d'un devis pour votre jardinage.",
+            date: "2022-01-25",
+            budjet: "350000 DZD",
             illustration: "jardinier.png",
         },
         {
@@ -54,15 +57,12 @@ function UserDevisRecus() {
         }
     ];
 
-    const handleFilterByPrice = () => {
-        const sortedQuotes = [...quotes].sort((a, b) => {
-            const priceA = parseInt(a.budjet.replace(' DZD', ''));
-            const priceB = parseInt(b.budjet.replace(' DZD', ''));
-            return sortDirection === 'asc' ? priceA - priceB : priceB - priceA;
-        });
-        setQuotes(sortedQuotes);
-        setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-    };
+    const [quotes, setQuotes] = useState(initialQuotes);
+    const [expandedIndex, setExpandedIndex] = useState(null);
+    const [showLinks, setShowLinks] = useState(null);
+    const [selectedImage, setSelectedImage] = useState(null);
+    const [isHovered, setIsHovered] = useState(null);
+ 
 
     const toggleExpand = (index) => {
         setExpandedIndex(expandedIndex === index ? null : index);
@@ -75,19 +75,12 @@ function UserDevisRecus() {
     return (
         <div style={{ backgroundColor: 'rgba(249, 249, 249, 1)' }}
             className='bg-slate-300 flex-1 mt-0 h-full p-6'>
+           
             <div className="rounded-2xl border-2 border-slate-500">
-                <div className="flex justify-end mb-4">
-                    <button 
-                        onClick={handleFilterByPrice}
-                        className="bg-lightGreen m-2 text-white px-4 py-2 rounded-md hover:bg-lightBlue transition-colors"
-                    >
-                        Filtrer par prix
-                    </button>
-                </div>
                 <table className="text-textBlack rounded-2xl w-full">
                     <thead>
                         <tr>
-                            {["Client", "Service", "Description", "Délai souhaité", "Budget prévus", "Illustration"].map((header, index) => (
+                            {["Artisan", "Service", "Description", "Délai souhaité", "Budget prévus", "Illustration"].map((header, index) => (
                                 <th 
                                     key={index} 
                                     className="px-6 py-5 text-left font-semibold tracking-wider"
@@ -108,7 +101,7 @@ function UserDevisRecus() {
                                         ? 'rgba(107, 142, 35, 0.35)' 
                                         : 'transparent' 
                                 }} 
-                                className=" rounded-2xl text-center border-t-2 border-slate-500 transition-all duration-300"
+                                className="rounded-2xl text-center border-t-2 border-slate-500 transition-all duration-300"
                             >
                                 <td className="items-center flex flex-row gap-2 text-center p-2">
                                     <img 
