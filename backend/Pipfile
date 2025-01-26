@@ -9,7 +9,6 @@ uvicorn = "*"
 psycopg2-binary = "*"
 sqlalchemy = "*"
 python-dotenv = "*"
-python-multipart = "*"
 pyjwt = "*"
 pytest = "*"
 httpx = "*"
@@ -17,6 +16,8 @@ exceptiongroup = "*"
 bcrypt = "*"
 itsdangerous = "*"
 pydantic = {extras = ["email"], version = "*"}
+cloudinary = "*"
+python-multipart = "*"
 
 [dev-packages]
 

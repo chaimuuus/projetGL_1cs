@@ -1,1 +1,13 @@
-1 --- faut verifier le format du mail et numero s'ils sont valide ou pas 
+fastapi
+uvicorn
+psycopg2-binary
+sqlalchemy
+python-dotenv
+python-multipart
+pyjwt
+pytest
+httpx
+exceptiongroup
+bcrypt
+itsdangerous
+pydantic[email]

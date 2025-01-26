@@ -26,8 +26,10 @@ def create_access_token(data: dict, expires_delta: timedelta):
 
 # Utility function to verify and decode JWT tokens
 def decode_access_token(token: str):
+    token = token.strip('=')
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        print(payload)
         return payload
     except jwt.ExpiredSignatureError:
         raise HTTPException(status_code=401, detail="Token has expired")
@@ -70,9 +72,9 @@ def user_signup(user_data: User_signup, db: Session = Depends(get_db)):
         """),
         {
             "user_name": user_data.user_name,
+            "phone_number": user_data.phone_number,
             "email": user_data.email,
             "password": hashed_password,
-            "phone_number": user_data.phone_number,
             "image_file": user_data.image_file,
             "address": user_data.address
         }
@@ -116,8 +118,7 @@ def user_login(user_data: User_login,remember_me: bool = False, db: Session = De
 def get_token_from_header(authorization: str = Header(...)):
     
     #Dependency to extract the token from the 'Authorization' header.
-    
-    
+
     if not authorization.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Invalid authorization header format")
     return authorization.split(" ")[1]  # Extract the token part after "Bearer "
@@ -141,6 +142,7 @@ def get_profile(token: str = Depends(get_token_from_header), db: Session = Depen
     """
     # Decode and verify JWT token
     payload = decode_access_token(token)
+    print(payload)
     user_id = payload.get("user_id")
 
     if not user_id:
@@ -402,3 +404,27 @@ def get_responded_devis_sorted_by_price(
         }
         for row in responded_devis_list
     ]
+
+@router.get("/users/{user_id}")
+def getArtisan(user_id: int, db: Session = Depends(get_db)):
+    query = text("""
+        SELECT 
+            id_user, 
+            user_name, 
+             
+           
+            
+            image_file
+        FROM users 
+        WHERE id_user = :id_user
+    """)
+    
+    result = db.execute(query, {"id_user": user_id}).fetchone()
+
+    if result is None:
+        raise HTTPException(status_code=404, detail="user not found")
+
+    # Convert SQLAlchemy row to dictionary
+    user = dict(result._mapping)
+    
+    return user

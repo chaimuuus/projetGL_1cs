@@ -1,4 +1,5 @@
-from fastapi import APIRouter, HTTPException, Depends ,  Header
+import cloudinary
+from fastapi import APIRouter, File, HTTPException, Depends ,  Header, UploadFile
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from ..models.model_Artisan import Artisan_Signup, Artisan_login , RequestedDevisResponseartisan ,ArtisanResponse,RespondedDevisResponse
@@ -9,6 +10,15 @@ from fastapi.responses import JSONResponse
 import jwt
 import logging
 from typing import List
+from ..config import API_KEY,API_SECRET,CLOUD_NAME
+import cloudinary.uploader
+
+
+cloudinary.config(
+    cloud_name="dzspl1idy",      # Replace with your Cloudinary cloud name
+    api_key="832396548965161",            # Replace with your Cloudinary API key
+    api_secret="cTQGi-eykaDeeHS6-IyTS50YvCo"      # Replace with your Cloudinary API secret
+)
 
 
 SECRET_KEY = "projetcode"
@@ -29,8 +39,10 @@ def create_access_token(data: dict, expires_delta: timedelta):
 
 # Utility function to verify and decode JWT tokens
 def decode_access_token(token: str):
+    token = token.strip('=')
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        print(payload)
         return payload
     except jwt.ExpiredSignatureError:
         raise HTTPException(status_code=401, detail="Token has expired")
@@ -101,7 +113,6 @@ def artisan_login(artisan_data: Artisan_login,remember_me: bool = False, db: Ses
         raise HTTPException(status_code=400, detail="Invalid email or password.")
 
     # Verify the provided password with the stored hashed password
-    print(artisan)
     if not verify_password(artisan_data.password, artisan[5]):
         raise HTTPException(status_code=400, detail="Invalid email or password.")
     
@@ -142,39 +153,69 @@ def get_artisan_profile(token: str = Depends(get_token_from_header), db: Session
     """
     # Decode and verify JWT token
     payload = decode_access_token(token)
-    id_artizan = payload.get("id_artizan")
+    if(payload.get("id_artizan")):
+        id_artizan = payload.get("id_artizan")
 
-    if not id_artizan:
-        raise HTTPException(status_code=400, detail="Invalid token")
+        if not id_artizan:
+            raise HTTPException(status_code=400, detail="Invalid token")
 
-    # Retrieve the artisan information from the database
-    artisan = db.execute(
-        text("""
-            SELECT artisan_id, full_name, metier, phone_number, email, image_file, 
-            localisation, disponibilite 
-            FROM artisans 
-            WHERE artisan_id = :id_artizan
-        """),
-        {"id_artizan": id_artizan}
-    ).fetchone()
+        # Retrieve the artisan information from the database
+        artisan = db.execute(
+            text("""
+                SELECT artisan_id, full_name, metier, phone_number, email, image_file, 
+                localisation, disponibilite 
+                FROM artisans 
+                WHERE artisan_id = :id_artizan
+            """),
+            {"id_artizan": id_artizan}
+        ).fetchone()
 
-    if not artisan:
-        raise HTTPException(status_code=404, detail="Artisan not found")
+        if not artisan:
+            raise HTTPException(status_code=404, detail="Artisan not found")
 
-    # Return full artisan profile
-    return {
-        "message": "This is your artisan profile",
-        "artisan": {
-            "id": artisan[0],
-            "full_name": artisan[1],
-            "metier": artisan[2],
-            "phone_number": artisan[3],
-            "email": artisan[4],
-            "image_file": artisan[5],
-            "localisation": artisan[6],
-            "disponibilite": artisan[7]
+        # Return full artisan profile
+        return {
+            "message": "This is your artisan profile",
+            "user": {
+                "id": artisan[0],
+                "user_name": artisan[1],
+                "metier": artisan[2],
+                "phone_number": artisan[3],
+                "email": artisan[4],
+                "image_file": artisan[5],
+                "localisation": artisan[6],
+                "disponibilite": artisan[7],
+                "role":"artisan"
+            }
         }
-    }
+    else:
+        user_id = payload.get("user_id")
+
+        if not user_id:
+            raise HTTPException(status_code=400, detail="Invalid token")
+
+        # Retrieve the user information from the database
+        user = db.execute(
+            text("SELECT id_user, user_name, email, phone_number, image_file, address FROM users WHERE id_user = :user_id"),
+            {"user_id": user_id}
+        ).fetchone()
+
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        # Return full user profile
+        return {
+            "message": "This is your profile",
+            "user": {
+                "id": user[0],
+                "user_name": user[1],
+                "email": user[2],
+                "phone_number": user[3],
+                "image_file": user[4],
+                "address": user[5],
+            }
+        }
+    
 
 
 # Enable logging for SQLAlchemy
@@ -183,7 +224,9 @@ logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
 
 @router.get("/artisans/search_metier")
-def search_artisans(metiers: str = "", clear_filters: bool = False, db: Session = Depends(get_db)):
+def search_artisans(metier: str = "", clear_filters: bool = True, db: Session = Depends(get_db)):
+    if metier:
+        clear_filters=False
     if clear_filters:
         # If clear_filters is True, fetch all artisans without filtering by métiers
         query = text("""
@@ -193,24 +236,21 @@ def search_artisans(metiers: str = "", clear_filters: bool = False, db: Session 
         artisans = db.execute(query).fetchall()
     else:
         # Clean up the list of métiers from the query parameter
-        metier_list = [m.strip() for m in metiers.split(",") if m.strip()]
         
-        if not metier_list:
-            raise HTTPException(status_code=400, detail="No métiers provided.")
         
         # Build the SQL query with parameters for the métiers
-        placeholders = ", ".join([f":metier{i}" for i in range(len(metier_list))])
+       
         query = text(f"""
-            SELECT * 
-            FROM artisans 
-            WHERE LOWER(TRIM(metier)) IN ({placeholders})
+            SELECT * FROM artisans 
+inner join metier on metier.id = artisans.metier
+where metier.name = :metier
         """)
 
         # Parameters for the query
-        params = {f"metier{i}": metier.lower() for i, metier in enumerate(metier_list)}
+        
         
         # Execute the query
-        artisans = db.execute(query, params).fetchall()
+        artisans = db.execute(query, {"metier":metier}).fetchall()
 
     # Process the results into a JSON-compatible structure
     results = [
@@ -218,6 +258,7 @@ def search_artisans(metiers: str = "", clear_filters: bool = False, db: Session 
             "id": artisan[0],
             "name": artisan[1],
             "metier": artisan[2],
+            "image_file":artisan[7],
             "localisation": artisan[8],
             "specialite": artisan[3],
         }
@@ -237,11 +278,12 @@ def search_artisans(keywords: str = "", db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="No keywords provided.")
 
     # Construction de la requête SQL avec des paramètres liés pour rechercher dans plusieurs colonnes
-    placeholders = " OR ".join([f"LOWER(full_name) LIKE :keyword{i} OR LOWER(specialite) LIKE :keyword{i} OR LOWER(metier) LIKE :keyword{i}" for i in range(len(keyword_list))])
+    placeholders = " OR ".join([f"LOWER(full_name) LIKE :keyword{i} OR LOWER(metier.name) LIKE :keyword{i}" for i in range(len(keyword_list))])
     
     query = text(f"""
         SELECT * 
         FROM artisans 
+        inner join metier on metier.id = artisans.metier
         WHERE ({placeholders})
     """)
 
@@ -473,3 +515,29 @@ def delete_requested_devis_for_artisan(
     db.commit()
 
     return {"message": "Devis demandé supprimé avec succès", "id": request_id}
+
+
+@router.get("/artisans/{artisan_id}")
+def getArtisan(artisan_id: int, db: Session = Depends(get_db)):
+    query = text("""
+        SELECT 
+            artisan_id, 
+            full_name, 
+            metier, 
+            phone_number, 
+            disponibilite, 
+            image_file, 
+            localisation
+        FROM artisans 
+        WHERE artisan_id = :artisan_id
+    """)
+    
+    result = db.execute(query, {"artisan_id": artisan_id}).fetchone()
+
+    if result is None:
+        raise HTTPException(status_code=404, detail="Artisan not found")
+
+    # Convert SQLAlchemy row to dictionary
+    artisan = dict(result._mapping)
+    
+    return artisan

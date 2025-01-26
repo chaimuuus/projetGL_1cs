@@ -7,6 +7,17 @@ from ..database.db import get_db
 from ..Utils.hashing import hash_password
 from pathlib import Path
 import os
+import cloudinary
+import cloudinary.uploader
+from ..config import API_KEY,API_SECRET,CLOUD_NAME
+
+
+cloudinary.config(
+    cloud_name=CLOUD_NAME,      # Replace with your Cloudinary cloud name
+    api_key=API_KEY,            # Replace with your Cloudinary API key
+    api_secret=API_SECRET      # Replace with your Cloudinary API secret
+)
+
 router = APIRouter()
 
 # Define the upload directory
@@ -72,19 +83,15 @@ async def editUserProfile(formdata: Edit_form_user, profile: dict = Depends(get_
 
 @router.patch('/user/updateProfilePic')
 async def updateProfilePic(profilePic : UploadFile = File(...),db : Session = Depends      (get_db),profile: dict = Depends(get_profile) ):
-    file_name = str(profile["artisan"]["id"])+profilePic.filename
-    file_location = UPLOAD_DIRECTORY /file_name
-
-
-    with open(file_location , 'wb') as f:
-        f.write(await profilePic.read())
+    upload_result = cloudinary.uploader.upload(profilePic.file,
+                                               folder=f"my_project/users/profilepic")
     
     query = text("""
                 UPDATE users
                  SET image_file = :file_location
                  WHERE id_user = :id_user
                  """)
-    result = db.execute(query,{"file_location" : SAVE_PATH+"/"+str(file_name),"id_user" : profile["artisan"]["id"]})
+    result = db.execute(query,{"file_location" : upload_result["secure_url"],"id_user" : profile["user"]["id"]})
     db.commit()
 
     return {"message": f"File {profilePic.filename} has been updated"}

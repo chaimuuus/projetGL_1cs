@@ -7,6 +7,17 @@ from ..database.db import get_db
 from ..Utils.hashing import hash_password
 from pathlib import Path
 import os
+import cloudinary
+import cloudinary.uploader
+from ..config import API_KEY,API_SECRET,CLOUD_NAME
+
+
+cloudinary.config(
+    cloud_name=CLOUD_NAME,      # Replace with your Cloudinary cloud name
+    api_key=API_KEY,            # Replace with your Cloudinary API key
+    api_secret=API_SECRET      # Replace with your Cloudinary API secret
+)
+
 router = APIRouter()
 
 
@@ -68,7 +79,7 @@ async def editArtisanProfile(formdata: Edit_form_artisan, profile: dict = Depend
     """)
     
     # Add the user_id to the params
-    params["artisan_id"] = profile["artisan"]["id"]
+    params["artisan_id"] = profile["user"]["id"]
     
     # Execute the update query
     result = db.execute(query, params)
@@ -82,19 +93,16 @@ async def editArtisanProfile(formdata: Edit_form_artisan, profile: dict = Depend
 @router.patch('/artisan/updateProfilePic')
 async def updateProfilePic(profilePic : UploadFile = File(...),db : Session = Depends      (get_db),profile: dict = Depends(get_artisan_profile) ):
 
-    file_name = str(profile["artisan"]["id"])+profilePic.filename
-    file_location = UPLOAD_DIRECTORY /file_name
+    upload_result = cloudinary.uploader.upload(profilePic.file,
+                                               folder=f"my_project/artisan/profilepic")
 
 
-    with open(file_location , 'wb') as f:
-        f.write(await profilePic.read())
-    
     query = text("""
                 UPDATE artisans
                  SET image_file = :file_location
                  WHERE artisan_id = :artisan_id
                  """)
-    result = db.execute(query,{"file_location" : SAVE_PATH+"/"+str(file_name),"artisan_id" : profile["artisan"]["id"]})
+    result = db.execute(query,{"file_location" : upload_result["secure_url"],"artisan_id" : profile["user"]["id"]})
     db.commit()
 
     return {"message": f"File {profilePic.filename} has been updated"}
@@ -109,7 +117,7 @@ async def addSpecialite(specialites : list[int] | None = None ,profile: dict = D
     for specialite in specialites:
         query = text("""INSERT INTO artisan_specialite (artisan_id , specialite_id) VALUES (:artisan_id ,:specialite_id)
         ON CONFLICT (artisan_id, specialite_id) DO NOTHING """)
-        db.execute(query,{"artisan_id":profile["artisan"]["id"],"specialite_id":specialite,})
+        db.execute(query,{"artisan_id":profile["user"]["id"],"specialite_id":specialite,})
     db.commit()
     
     return{"status":"specialites added"}
@@ -124,7 +132,7 @@ async def getArtisanSpecialites(profile: dict = Depends(get_artisan_profile), db
             WHERE artisan_id = :artisan_id
 """)
     print(profile)
-    result = db.execute(query,{"artisan_id":profile["artisan"]["id"]}).fetchall()
+    result = db.execute(query,{"artisan_id":profile["user"]["id"]}).fetchall()
 
         
     return[row._mapping for row in result]
@@ -138,7 +146,7 @@ async def removeSpecialite(specialite_id : int ,profile: dict = Depends(get_arti
     WHERE specialite_id = :specialite_id AND artisan_id = :artisan_id
     """)
 
-    result = db.execute(query,{"specialite_id":specialite_id,"artisan_id":profile["artisan"]["id"]})
+    result = db.execute(query,{"specialite_id":specialite_id,"artisan_id":profile["user"]["id"]})
     db.commit()
 
     return {"message":"specialite has been removed"}

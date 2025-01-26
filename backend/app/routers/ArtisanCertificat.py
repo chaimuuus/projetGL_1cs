@@ -6,6 +6,17 @@ from .artisan import get_artisan_profile
 from ..database.db import get_db
 from pathlib import Path
 from datetime import date
+import cloudinary
+import cloudinary.uploader
+from ..config import API_KEY,API_SECRET,CLOUD_NAME
+
+
+cloudinary.config(
+    cloud_name="dzspl1idy",      # Replace with your Cloudinary cloud name
+    api_key="832396548965161",            # Replace with your Cloudinary API key
+    api_secret="cTQGi-eykaDeeHS6-IyTS50YvCo"      # Replace with your Cloudinary API secret
+)
+
 
 router = APIRouter()
 # Define the upload directory
@@ -23,7 +34,7 @@ async def getCertificats(profile: dict = Depends(get_artisan_profile),
         FROM certificates
         WHERE artisan_id = :artisan_id;
     """)
-    result = db.execute(query, {"artisan_id": profile.get("artisan_id")}).fetchall()
+    result = db.execute(query, {"artisan_id": profile["artisan"]["id"]}).fetchall()
     if not result:
             raise HTTPException(status_code=400, detail="No certificats found for this artisan")
     return [dict(row._mapping) for row in result]
@@ -40,18 +51,16 @@ async def addCertificat(
     profile: dict = Depends(get_artisan_profile),
     db: Session = Depends(get_db)):
     
-    file_name = str(profile.get("artisan_id"))+image_file.filename
-    file_location = UPLOAD_DIRECTORY /file_name
+    upload_result = cloudinary.uploader.upload(image_file.file,
+                                               folder=f"my_project/certificat")
 
-    with open(file_location , 'wb') as f:
-        f.write(await image_file.read())
     
     query = text("""
         INSERT INTO certificates (title, institution, description, obtaining_date,image_file, artisan_id)
         VALUES (:title, :institution, :description, :obtaining_date,:image_file, :artisan_id)
         RETURNING certificat_id;
     """)
-    result = db.execute(query,{"title" :title,"institution" : institution,"description":description,"obtaining_date":obtaining_date,"image_file":SAVE_PATH+"/"+str(file_name),"artisan_id":profile.get("artisan_id")})
+    result = db.execute(query,{"title" :title,"institution" : institution,"description":description,"obtaining_date":obtaining_date,"image_file":upload_result["secure_url"],"artisan_id":profile["artisan"]["id"]})
 
     db.commit()
 
@@ -102,12 +111,10 @@ async def editCertificat(
         params["obtaining_date"] = obtaining_date
 
     if image_file:
-        file_name = str(profile.get("artisan_id"))+image_file.filename
-        file_location = UPLOAD_DIRECTORY /file_name
-        with open(file_location , 'wb') as f:
-            f.write(await image_file.read())
-        updates.append("image_file = :image_file")
-        params["image_file"] = SAVE_PATH+"/"+str(file_name)
+        upload_result = cloudinary.uploader.upload(image_file.file,
+                                                   folder=f"my_project/certificat")
+
+        params["image_file"] =upload_result["secure_url"]
     
     
     
@@ -134,3 +141,15 @@ async def editCertificat(
     # Return a success response
     return {"status": "success", "message": "certificat updated successfully"}
      
+@router.post("/addMetier")
+async def add(name : str ,image_file : UploadFile = File(...) ,db: Session = Depends(get_db)):
+    upload_result = cloudinary.uploader.upload(image_file.file,
+                                               folder=f"my_project/certificat")
+    query = text("""
+            INSERT INTO metier (name, image_file) 
+            VALUES (:name, :image_file)
+        """)
+    db.execute(query, {"name": name, "image_file": upload_result["secure_url"]})
+    db.commit()
+
+    return {"message": "Metier added successfully", "image_path": upload_result["secure_url"]}
