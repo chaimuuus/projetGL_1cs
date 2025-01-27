@@ -135,3 +135,16 @@ async def editProject(
     # Return a success response
     return {"status": "success", "message": "project updated successfully"}
      
+@router.get('/artisan/{artisan_id}/getProjects')
+async def getProjects(artisan_id:int,
+    db: Session = Depends(get_db)):
+
+    query = text("""
+        SELECT * 
+        FROM projects
+        WHERE artisan_id = :artisan_id;
+    """)
+    result = db.execute(query, {"artisan_id": artisan_id}).fetchall()
+    if not result:
+            raise HTTPException(status_code=404, detail="No projects found for this artisan")
+    return [dict(row._mapping) for row in result]

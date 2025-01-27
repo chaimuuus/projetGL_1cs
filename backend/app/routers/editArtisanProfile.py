@@ -170,3 +170,17 @@ async def getMetiers(db: Session = Depends(get_db)):
     result = db.execute(query).fetchall()
     return[row._mapping for row in result]
 
+@router.get("/artisans/specialites/{artisan_id}")
+async def getArtisanSpecialitesById(artisan_id:int,
+    db: Session = Depends(get_db)):
+     
+    query = text("""
+            SELECT specialites.name, specialites.specialite_id FROM specialites
+            INNER JOIN artisan_specialite
+            ON specialites.specialite_id = artisan_specialite.specialite_id
+            WHERE artisan_id = :artisan_id
+""")
+    result = db.execute(query,{"artisan_id":artisan_id}).fetchall()
+
+        
+    return[row._mapping for row in result]

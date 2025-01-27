@@ -34,7 +34,7 @@ async def getCertificats(profile: dict = Depends(get_artisan_profile),
         FROM certificates
         WHERE artisan_id = :artisan_id;
     """)
-    result = db.execute(query, {"artisan_id": profile["artisan"]["id"]}).fetchall()
+    result = db.execute(query, {"artisan_id": profile["user"]["id"]}).fetchall()
     if not result:
             raise HTTPException(status_code=400, detail="No certificats found for this artisan")
     return [dict(row._mapping) for row in result]
@@ -60,7 +60,7 @@ async def addCertificat(
         VALUES (:title, :institution, :description, :obtaining_date,:image_file, :artisan_id)
         RETURNING certificat_id;
     """)
-    result = db.execute(query,{"title" :title,"institution" : institution,"description":description,"obtaining_date":obtaining_date,"image_file":upload_result["secure_url"],"artisan_id":profile["artisan"]["id"]})
+    result = db.execute(query,{"title" :title,"institution" : institution,"description":description,"obtaining_date":obtaining_date,"image_file":upload_result["secure_url"],"artisan_id":profile["user"]["id"]})
 
     db.commit()
 
@@ -153,3 +153,18 @@ async def add(name : str ,image_file : UploadFile = File(...) ,db: Session = Dep
     db.commit()
 
     return {"message": "Metier added successfully", "image_path": upload_result["secure_url"]}
+
+
+@router.get('/artisan/{artisan_id}/getCertificats')
+async def getCertificats(artisan_id : int,
+    db: Session = Depends(get_db)):
+
+    query = text("""
+        SELECT * 
+        FROM certificates
+        WHERE artisan_id = :artisan_id;
+    """)
+    result = db.execute(query, {"artisan_id": artisan_id}).fetchall()
+    if not result:
+            raise HTTPException(status_code=400, detail="No certificats found for this artisan")
+    return [dict(row._mapping) for row in result]

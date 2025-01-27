@@ -1,4 +1,5 @@
-from fastapi import APIRouter, HTTPException, Depends , Header
+import cloudinary
+from fastapi import APIRouter, File, Form, HTTPException, Depends , Header, UploadFile
 import jwt.utils
 from sqlalchemy.orm import Session  
 from sqlalchemy import text
@@ -7,9 +8,10 @@ from ..Utils.hashing import hash_password, verify_password
 from ..database.db import get_db
 import jwt
 from fastapi.responses import JSONResponse
-from datetime import datetime, timedelta, timezone
-from typing import List
- 
+from datetime import date, datetime, timedelta, timezone
+from typing import List, Optional, Union
+import cloudinary.uploader
+
 SECRET_KEY = "projetcode"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_DAYS = 2
@@ -115,13 +117,13 @@ def user_login(user_data: User_login,remember_me: bool = False, db: Session = De
 
     return {"access_token": access_token, "token_type": "bearer"}
 
-def get_token_from_header(authorization: str = Header(...)):
+def get_token_from_header(token: str = Header(...)):
     
     #Dependency to extract the token from the 'Authorization' header.
 
-    if not authorization.startswith("Bearer "):
+    if not token.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Invalid authorization header format")
-    return authorization.split(" ")[1]  # Extract the token part after "Bearer "
+    return token.split(" ")[1]  # Extract the token part after "Bearer "
 
 
 
@@ -174,10 +176,22 @@ def get_profile(token: str = Depends(get_token_from_header), db: Session = Depen
 
 
 @router.post("/user/request_devis")
-def request_devis(request: RequestedDevisCreate, db: Session = Depends(get_db), token: str = Depends(get_token_from_header)):
+def request_devis(service_demande: str = Form(...),
+    artisan_id: int = Form(...),
+    description: Optional[str] = Form(...),
+    budget_prevu: Optional[int] = Form(...),
+    date_souhaite: Optional[date] = Form(...),
+    location_user: str = Form(...),
+    urgence: bool = False,
+    image_file: Union[UploadFile, str] = File(None) ,
+    db: Session = Depends(get_db), token: str = Depends(get_token_from_header)):
+
     # Decode and verify JWT token
     payload = decode_access_token(token)
     user_id = payload.get("user_id")
+
+    upload_result = cloudinary.uploader.upload(image_file.file,
+                                                   folder=f"my_project/devis")
 
     if not user_id:
         raise HTTPException(status_code=400, detail="Invalid token")
@@ -198,14 +212,14 @@ def request_devis(request: RequestedDevisCreate, db: Session = Depends(get_db), 
         """),
         {
             "id_user": user_id,
-            "service_demande": request.service_demande,
-            "artisan_id": request.artisan_id,
-            "description": request.description,
-            "budget_prevu": request.budget_prevu,
-            "date_souhaite": request.date_souhaite,
-            "illustrations": request.illustrations,
-            "location_user": request.location_user,
-            "urgence": request.urgence
+            "service_demande": service_demande,
+            "artisan_id": artisan_id,
+            "description": description,
+            "budget_prevu": budget_prevu,
+            "date_souhaite": date_souhaite,
+            "illustrations": upload_result["secure_url"],
+            "location_user": location_user,
+            "urgence": urgence
         }
     )
 
@@ -224,7 +238,7 @@ def request_devis(request: RequestedDevisCreate, db: Session = Depends(get_db), 
     
     
     
-@router.get("/user/requested_devis", response_model=List[RequestedDevisResponse])
+@router.get("/user/requested_devis")
 def get_requested_devis(db: Session = Depends(get_db), token: str = Depends(get_token_from_header)):
     # Decode and verify JWT token
     payload = decode_access_token(token)
@@ -236,10 +250,11 @@ def get_requested_devis(db: Session = Depends(get_db), token: str = Depends(get_
     # Fetch all requested_devis for the user from the database
     result = db.execute(
         text("""
-            SELECT id_rqdevis, service_demande, artisan_id, description, 
+            SELECT id_rqdevis, service_demande, requested_devis.artisan_id, description, 
                 budget_prevu, date_souhaite, illustrations, request_date, 
-                location_user, statut_demande, urgence
+                location_user, statut_demande, urgence,artisans.full_name,artisans.image_file
             FROM requested_devis
+             INNER JOIN artisans ON requested_devis.artisan_id = artisans.artisan_id
             WHERE id_user = :id_user
         """),
         {"id_user": user_id}
@@ -253,25 +268,10 @@ def get_requested_devis(db: Session = Depends(get_db), token: str = Depends(get_
         raise HTTPException(status_code=404, detail="No requested devis found for the user")
 
     # Return the list of requested_devis
-    return [
-        {
-            "id_rqdevis": row[0],
-            "service_demande": row[1],
-            "artisan_id": row[2],
-            "description": row[3],
-            "budget_prevu": row[4],
-            "date_souhaite": row[5],
-            "illustrations": row[6],
-            "request_date": row[7],
-            "location_user": row[8],
-            "statut_demande": row[9],
-            "urgence": row[10]
-        }
-        for row in requested_devis_list
-    ]
+    return [dict(row._mapping) for row in requested_devis_list]
     
     
-@router.get("/user/responded_devis", response_model=List[RespondedDevisResponse])
+@router.get("/user/responded_devis")
 def get_responded_devis_for_user(
     db: Session = Depends(get_db), 
     token: str = Depends(get_token_from_header)
@@ -286,9 +286,10 @@ def get_responded_devis_for_user(
     # Fetch all responded_devis for the user from the database
     result = db.execute(
         text("""
-            SELECT id_rpdevis, id_rqdevis, artisan_id, prix, delai_estime, 
-                service_details, response_date, remarques, id_user
+            SELECT id_rpdevis, id_rqdevis, responded_devis.artisan_id, prix, delai_estime, 
+                service_details, response_date, remarques, id_user,artisans.full_name,artisans.image_file
             FROM responded_devis
+             INNER JOIN artisans ON responded_devis.artisan_id = artisans.artisan_id
             WHERE id_user = :user_id
         """),
         {"user_id": user_id}
@@ -302,20 +303,8 @@ def get_responded_devis_for_user(
         raise HTTPException(status_code=404, detail="No responded devis found for the user")
 
     # Return the list of responded_devis
-    return [
-        {
-            "id_rpdevis": row[0],
-            "id_rqdevis": row[1],
-            "artisan_id": row[2],
-            "prix": row[3],
-            "delai_estime": row[4],
-            "service_details": row[5],
-            "response_date": row[6],
-            "remarques": row[7],
-            "id_user": row[8]
-        }
-        for row in responded_devis_list
-    ]
+    return [dict(row._mapping) for row in responded_devis_list]
+
     
 @router.delete("/user/request_devis/{request_id}")
 def delete_request_devis(
@@ -406,7 +395,7 @@ def get_responded_devis_sorted_by_price(
     ]
 
 @router.get("/users/{user_id}")
-def getArtisan(user_id: int, db: Session = Depends(get_db)):
+def getuser(user_id: int, db: Session = Depends(get_db)):
     query = text("""
         SELECT 
             id_user, 

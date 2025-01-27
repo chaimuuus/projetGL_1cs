@@ -24,9 +24,9 @@ class RequestedDevisCreate(BaseModel):
     description: Optional[str] = None
     budget_prevu: Optional[int] = None
     date_souhaite: Optional[date] = None
-    illustrations: Optional[str] = None
     location_user: str
     urgence: bool = False
+    
     
     
 class RequestedDevisResponse(BaseModel):
@@ -41,6 +41,8 @@ class RequestedDevisResponse(BaseModel):
     location_user: str
     statut_demande: str
     urgence: bool
+    image_file:str
+    full_name:str
 
 class RespondedDevisResponse(BaseModel):
     id_rpdevis: int
@@ -52,3 +54,5 @@ class RespondedDevisResponse(BaseModel):
     response_date: date
     remarques: Optional[str]
     id_user: int
+    image_file:str
+    full_name:str

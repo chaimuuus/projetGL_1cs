@@ -380,8 +380,9 @@ def get_requested_devis_for_artisan(db: Session = Depends(get_db), token: str = 
             SELECT 
                 rd.id_rqdevis, rd.service_demande, rd.id_user, rd.description, 
                 rd.budget_prevu, rd.date_souhaite, rd.illustrations, rd.request_date, 
-                rd.location_user, rd.statut_demande, rd.urgence
+                rd.location_user, rd.statut_demande, rd.urgence,users.image_file,users.user_name
             FROM requested_devis rd
+            INNER JOIN users ON rd.id_user = users.id_user
             WHERE rd.artisan_id = :artisan_id
         """),
         {"artisan_id": artisan_id}
@@ -418,8 +419,9 @@ def get_responded_devis_for_artisan(
         text("""
             SELECT 
                 id_rpdevis, id_rqdevis, artisan_id, prix, delai_estime, 
-                service_details, response_date, remarques, id_user
+                service_details, response_date, remarques, responded_devis.id_user,user_name,image_file
             FROM responded_devis
+             INNER JOIN users ON users.id_user = responded_devis.id_user
             WHERE artisan_id = :artisan_id
         """),
         {"artisan_id": artisan_id}

@@ -34,6 +34,8 @@ class RequestedDevisResponseartisan(BaseModel):
     location_user: str
     statut_demande: str
     urgence: bool
+    user_name: str
+    image_file:str
 
 
 class RespondedDevisResponse(BaseModel):
@@ -46,6 +48,8 @@ class RespondedDevisResponse(BaseModel):
     response_date: str
     remarques: Optional[str] = None
     id_user: int
+    user_name: str
+    image_file:str
     
     @validator("response_date", pre=True)
     def format_response_date(cls, v):
